@@ -10,12 +10,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="it" suppressHydrationWarning>
-      <body className="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+      <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="mx-auto max-w-5xl p-4">
             <div className="flex justify-end">

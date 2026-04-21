@@ -5,8 +5,8 @@ const mainSections = [
   { href: "/emergenze", title: "Emergenze", desc: "WETFLAG, dosi rapide, algoritmi" },
   { href: "/calcolatori", title: "Calcolatori", desc: "Crescita, farmaci, idratazione" },
   { href: "/risorse", title: "Risorse", desc: "Linee guida e link utili" },
-  { href: "/genitori", title: "Genitori", desc: "Informazioni pratiche per le famiglie" },
-  { href: "/info", title: "Informazioni", desc: "Progetto, note e disclaimer" },
+  { href: "/genitori", title: "Genitori", desc: "Info pratiche per le famiglie" },
+  { href: "/info", title: "Informazioni", desc: "Progetto e disclaimer" },
 ];
 
 const quickTools = [
