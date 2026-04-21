@@ -13,8 +13,8 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="it" suppressHydrationWarning>
-      <body>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <body className="dark:bg-slate-950 dark:text-slate-50">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="theme">
           <div className="mx-auto max-w-5xl p-4">
             <div className="flex justify-end">
               <ThemeToggle />
