@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 
 export default function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -13,7 +13,8 @@ export default function ThemeToggle() {
 
   if (!mounted) return null;
 
-  const isDark = resolvedTheme === "dark";
+  const currentTheme = resolvedTheme ?? theme;
+  const isDark = currentTheme === "dark";
 
   return (
     <button
