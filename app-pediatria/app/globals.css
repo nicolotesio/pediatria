@@ -1,9 +1,2 @@
 @import "tailwindcss";
-
-html {
-  color-scheme: light dark;
-}
-
-body {
-  min-height: 100vh;
-}
+@custom-variant dark (&:where(.dark, .dark *));
