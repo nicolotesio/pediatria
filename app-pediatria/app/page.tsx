@@ -21,9 +21,6 @@ export default function HomePage() {
     <main className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       <div className="mx-auto max-w-5xl p-4">
         <div className="mt-4 flex items-start justify-between gap-4">
-          <div className="rounded-xl bg-white p-4 dark:bg-black">
-  Test tema
-</div>
           <div>
             <h1 className="text-2xl font-bold sm:text-3xl">Appunti di Pediatria</h1>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">

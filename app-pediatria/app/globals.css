@@ -1,2 +1,8 @@
 @import "tailwindcss";
+
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* DEBUG VISIVO */
+html.dark body {
+  outline: 3px solid red;
+}
