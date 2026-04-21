@@ -18,9 +18,6 @@ export default function RootLayout({
       <body className="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="mx-auto max-w-5xl p-4">
-            <div className="mb-4 flex justify-end">
-              <ThemeToggle />
-            </div>
             {children}
           </div>
         </ThemeProvider>
