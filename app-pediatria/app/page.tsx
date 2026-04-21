@@ -2,12 +2,12 @@ import Link from "next/link";
 import ThemeToggle from "@/components/theme-toggle";
 
 const mainSections = [
-  { href: "/appunti", title: "Appunti", desc: "Appunti divisi per materia" },
-  { href: "/emergenze", title: "Emergenze", desc: "WETFLAG, dosi rapide, algoritmi" },
-  { href: "/calcolatori", title: "Calcolatori", desc: "Crescita, farmaci, scores clinici" },
-  { href: "/risorse", title: "Risorse", desc: "Linee guida e link utili" },
-  { href: "/genitori", title: "Genitori", desc: "Info pratiche per le famiglie" },
-  { href: "/info", title: "Informazioni", desc: "Progetto e disclaimer" },
+  { href: "/appunti", title: "Appunti", desc: "Appunti divisi per materia", icon: "📚" },
+  { href: "/emergenze", title: "Emergenze", desc: "WETFLAG, dosi rapide, algoritmi", icon: "🚑" },
+  { href: "/calcolatori", title: "Calcolatori", desc: "Crescita, farmaci, idratazione", icon: "🧮" },
+  { href: "/risorse", title: "Risorse", desc: "Linee guida e link utili", icon: "📖" },
+  { href: "/genitori", title: "Genitori", desc: "Info pratiche per le famiglie", icon: "👶" },
+  { href: "/info", title: "Informazioni", desc: "Progetto e disclaimer", icon: "ℹ️" },
 ];
 
 export default function HomePage() {
@@ -56,7 +56,8 @@ export default function HomePage() {
               href={section.href}
               className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
             >
-              <h2 className="text-2xl font-semibold">
+              <h2 className="flex items-center gap-2 text-2xl font-semibold">
+                <span className="text-lg">{section.icon}</span>
                 {section.title}
               </h2>
 
