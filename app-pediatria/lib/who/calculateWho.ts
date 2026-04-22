@@ -32,21 +32,36 @@ export async function calculateWhoPercentile(params: {
   return calculateWhoPercentileFromRow(row, value);
 }
 
-export function interpretPercentile(percentile: number): {
-  label: string;
-  tone: "red" | "amber" | "green" | "blue";
-} {
-  if (percentile < 3) {
-    return { label: "Molto basso", tone: "red" };
+export function getPercentileTone(
+  percentile: number,
+  measure: "weight" | "length" | "head" | "weightForLength"
+): "red" | "amber" | "green" | "blue" {
+  if (measure === "weightForLength") {
+    if (percentile < 3) return "red";
+    if (percentile < 10) return "amber";
+    if (percentile <= 90) return "green";
+    if (percentile <= 97) return "blue";
+    return "blue";
   }
-  if (percentile < 10) {
-    return { label: "Basso", tone: "amber" };
+
+  if (measure === "weight") {
+    if (percentile < 3) return "red";
+    if (percentile < 10) return "amber";
+    if (percentile <= 90) return "green";
+    return "blue";
   }
-  if (percentile <= 90) {
-    return { label: "Nella norma", tone: "green" };
+
+  if (measure === "length") {
+    if (percentile < 3) return "red";
+    if (percentile <= 97) return "green";
+    return "blue";
   }
-  if (percentile <= 97) {
-    return { label: "Alto", tone: "blue" };
+
+  if (measure === "head") {
+    if (percentile < 3) return "red";
+    if (percentile <= 97) return "green";
+    return "blue";
   }
-  return { label: "Molto alto", tone: "blue" };
+
+  return "green";
 }

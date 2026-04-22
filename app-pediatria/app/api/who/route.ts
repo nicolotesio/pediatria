@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { calculateWhoPercentile, interpretPercentile } from "@/lib/who/calculateWho";
+import {
+  calculateWhoPercentile,
+  getPercentileTone,
+} from "@/lib/who/calculateWho";
 
-function withInterpretation(result: any) {
+function withTone(
+  result: any,
+  measure: "weight" | "length" | "head" | "weightForLength"
+) {
   if (!result) return null;
+
   return {
     ...result,
-    interpretation: interpretPercentile(result.percentile),
+    tone: getPercentileTone(result.percentile, measure),
   };
 }
 
@@ -59,10 +66,10 @@ export async function POST(req: NextRequest) {
         : null;
 
     return NextResponse.json({
-      weight: withInterpretation(weightResult),
-      length: withInterpretation(lengthResult),
-      head: withInterpretation(headResult),
-      weightForLength: withInterpretation(weightForLengthResult),
+      weight: withTone(weightResult, "weight"),
+      length: withTone(lengthResult, "length"),
+      head: withTone(headResult, "head"),
+      weightForLength: withTone(weightForLengthResult, "weightForLength"),
     });
   } catch (err) {
     console.error(err);

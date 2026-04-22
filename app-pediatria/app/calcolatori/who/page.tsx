@@ -11,10 +11,7 @@ type WhoResult = {
   l: number;
   m: number;
   s: number;
-  interpretation?: {
-    label: string;
-    tone: "red" | "amber" | "green" | "blue";
-  };
+  tone?: "red" | "amber" | "green" | "blue";
 } | null;
 
 type ApiResponse = {
@@ -88,7 +85,7 @@ export default function WHOPage() {
           Peso, lunghezza, circonferenza cranica e peso per lunghezza
         </p>
 
-        <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4">
+        <div className="mt-6 space-y-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div>
             <label className="text-sm font-medium">Sesso</label>
             <select
@@ -142,7 +139,9 @@ export default function WHOPage() {
           </div>
 
           <div>
-            <label className="text-sm font-medium">Circonferenza cranica (cm)</label>
+            <label className="text-sm font-medium">
+              Circonferenza cranica (cm)
+            </label>
             <input
               type="number"
               inputMode="decimal"
@@ -163,10 +162,16 @@ export default function WHOPage() {
 
         {result && (
           <div className="mt-6 space-y-4">
-            <ResultCard title="Peso per età" data={result.weight} />
-            <ResultCard title="Lunghezza per età" data={result.length} />
-            <ResultCard title="Circonferenza cranica per età" data={result.head} />
-            <ResultCard title="Peso per lunghezza" data={result.weightForLength} />
+            <ResultRow title="Peso per età" data={result.weight} />
+            <ResultRow title="Lunghezza per età" data={result.length} />
+            <ResultRow
+              title="Circonferenza cranica per età"
+              data={result.head}
+            />
+            <ResultRow
+              title="Peso per lunghezza"
+              data={result.weightForLength}
+            />
           </div>
         )}
       </div>
@@ -174,7 +179,15 @@ export default function WHOPage() {
   );
 }
 
-function ResultCard({
+function formatDs(zScore: number): string {
+  const rounded = Math.round(zScore * 10) / 10;
+
+  if (rounded === 0) return "0 DS";
+  if (rounded > 0) return `+${rounded} DS`;
+  return `${rounded} DS`;
+}
+
+function ResultRow({
   title,
   data,
 }: {
@@ -183,40 +196,58 @@ function ResultCard({
 }) {
   if (!data) {
     return (
-      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <p className="text-sm text-slate-500 dark:text-slate-400">{title}</p>
-        <p className="mt-2 text-lg text-slate-400 dark:text-slate-500">
-          Calcolo non disponibile
-        </p>
+      <div className="rounded-3xl border border-slate-200 bg-white px-5 py-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+          <div className="min-w-0 sm:max-w-[60%]">
+            <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
+              {title}
+            </p>
+            <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
+              Calcolo non disponibile
+            </p>
+          </div>
+
+          <div className="shrink-0 sm:text-right">
+            <p className="text-2xl font-bold text-slate-400 dark:text-slate-500 sm:text-3xl">
+              —
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   const toneMap = {
-    red: "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-900",
-    amber: "bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900",
-    green: "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900",
-    blue: "bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-900",
+    red: "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/20",
+    amber:
+      "border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/20",
+    green:
+      "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/20",
+    blue: "border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/20",
   };
 
-  const toneClass = data.interpretation ? toneMap[data.interpretation.tone] : "";
+  const toneClass = data.tone
+    ? toneMap[data.tone]
+    : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
 
   return (
-    <div className={`rounded-3xl border p-5 shadow-sm ${toneClass || "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"}`}>
-      <p className="text-sm text-slate-500 dark:text-slate-400">{title}</p>
-      <div className="mt-2 flex items-end justify-between gap-4">
-        <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-          {data.percentile}°
-        </p>
-        {data.interpretation && (
-          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-            {data.interpretation.label}
+    <div className={`rounded-3xl border px-5 py-5 shadow-sm ${toneClass}`}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+        <div className="min-w-0 sm:max-w-[60%]">
+          <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
+            {title}
           </p>
-        )}
+        </div>
+
+        <div className="shrink-0 sm:text-right">
+          <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 sm:text-3xl">
+            {data.percentile}°
+          </p>
+          <p className="mt-1 text-base font-medium text-slate-500 dark:text-slate-400">
+            {formatDs(data.zScore)}
+          </p>
+        </div>
       </div>
-      <p className="mt-1 text-sm text-slate-400 dark:text-slate-500">
-        z-score: {data.zScore}
-      </p>
     </div>
   );
 }
