@@ -1,15 +1,15 @@
 export type WhoSex = "boys" | "girls";
-export type WhoMeasure = "weight" | "length" | "head";
+export type WhoMeasure = "weight" | "length" | "head" | "weightForLength";
 
 export type WhoLmsRow = {
-  month: number;
+  x: number;
   l: number;
   m: number;
   s: number;
 };
 
 export type WhoCalculationResult = {
-  month: number;
+  x: number;
   value: number;
   zScore: number;
   percentile: number;

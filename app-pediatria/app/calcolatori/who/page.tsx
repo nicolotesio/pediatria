@@ -4,19 +4,24 @@ import { useState } from "react";
 import Link from "next/link";
 
 type WhoResult = {
-  month: number;
+  x: number;
   value: number;
   zScore: number;
   percentile: number;
   l: number;
   m: number;
   s: number;
+  interpretation?: {
+    label: string;
+    tone: "red" | "amber" | "green" | "blue";
+  };
 } | null;
 
 type ApiResponse = {
   weight: WhoResult;
   length: WhoResult;
   head: WhoResult;
+  weightForLength: WhoResult;
   error?: string;
 };
 
@@ -80,7 +85,7 @@ export default function WHOPage() {
         </h1>
 
         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-          Peso, lunghezza e circonferenza cranica per età
+          Peso, lunghezza, circonferenza cranica e peso per lunghezza
         </p>
 
         <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4">
@@ -158,9 +163,10 @@ export default function WHOPage() {
 
         {result && (
           <div className="mt-6 space-y-4">
-            <ResultCard title="Peso" data={result.weight} />
-            <ResultCard title="Lunghezza" data={result.length} />
-            <ResultCard title="Circonferenza cranica" data={result.head} />
+            <ResultCard title="Peso per età" data={result.weight} />
+            <ResultCard title="Lunghezza per età" data={result.length} />
+            <ResultCard title="Circonferenza cranica per età" data={result.head} />
+            <ResultCard title="Peso per lunghezza" data={result.weightForLength} />
           </div>
         )}
       </div>
@@ -186,12 +192,28 @@ function ResultCard({
     );
   }
 
+  const toneMap = {
+    red: "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-900",
+    amber: "bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900",
+    green: "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900",
+    blue: "bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-900",
+  };
+
+  const toneClass = data.interpretation ? toneMap[data.interpretation.tone] : "";
+
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div className={`rounded-3xl border p-5 shadow-sm ${toneClass || "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"}`}>
       <p className="text-sm text-slate-500 dark:text-slate-400">{title}</p>
-      <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
-        {data.percentile}°
-      </p>
+      <div className="mt-2 flex items-end justify-between gap-4">
+        <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+          {data.percentile}°
+        </p>
+        {data.interpretation && (
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            {data.interpretation.label}
+          </p>
+        )}
+      </div>
       <p className="mt-1 text-sm text-slate-400 dark:text-slate-500">
         z-score: {data.zScore}
       </p>

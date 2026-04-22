@@ -6,9 +6,10 @@ export function parseWhoCsv(csvText: string): WhoLmsRow[] {
     .map((line) => line.trim())
     .filter(Boolean);
 
-  if (lines.length < 2) {
-    return [];
-  }
+  if (lines.length < 2) return [];
+
+  const headers = lines[0].split(",").map((h) => h.trim());
+  const firstKey = headers[0];
 
   const dataLines = lines.slice(1);
 
@@ -16,7 +17,7 @@ export function parseWhoCsv(csvText: string): WhoLmsRow[] {
     const cols = line.split(",");
 
     return {
-      month: Number(cols[0]),
+      x: Number(cols[0]), // Month oppure Length
       l: Number(cols[1]),
       m: Number(cols[2]),
       s: Number(cols[3]),

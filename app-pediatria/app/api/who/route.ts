@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { calculateWhoPercentile } from "@/lib/who/calculateWho";
+import { calculateWhoPercentile, interpretPercentile } from "@/lib/who/calculateWho";
+
+function withInterpretation(result: any) {
+  if (!result) return null;
+  return {
+    ...result,
+    interpretation: interpretPercentile(result.percentile),
+  };
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,7 +20,7 @@ export async function POST(req: NextRequest) {
         ? await calculateWhoPercentile({
             sex,
             measure: "weight",
-            month,
+            x: month,
             value: weight,
           })
         : null;
@@ -22,7 +30,7 @@ export async function POST(req: NextRequest) {
         ? await calculateWhoPercentile({
             sex,
             measure: "length",
-            month,
+            x: month,
             value: length,
           })
         : null;
@@ -32,15 +40,29 @@ export async function POST(req: NextRequest) {
         ? await calculateWhoPercentile({
             sex,
             measure: "head",
-            month,
+            x: month,
             value: head,
           })
         : null;
 
+    const weightForLengthResult =
+      weight !== null &&
+      weight !== undefined &&
+      length !== null &&
+      length !== undefined
+        ? await calculateWhoPercentile({
+            sex,
+            measure: "weightForLength",
+            x: length,
+            value: weight,
+          })
+        : null;
+
     return NextResponse.json({
-      weight: weightResult,
-      length: lengthResult,
-      head: headResult,
+      weight: withInterpretation(weightResult),
+      length: withInterpretation(lengthResult),
+      head: withInterpretation(headResult),
+      weightForLength: withInterpretation(weightForLengthResult),
     });
   } catch (err) {
     console.error(err);

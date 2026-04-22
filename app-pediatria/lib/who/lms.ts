@@ -41,8 +41,16 @@ export function zScoreToPercentile(z: number): number {
   return normalCdf(z) * 100;
 }
 
-export function getRowForMonth(rows: WhoLmsRow[], month: number): WhoLmsRow | undefined {
-  return rows.find((row) => row.month === month);
+export function getRowForX(rows: WhoLmsRow[], x: number): WhoLmsRow | undefined {
+  return rows.find((row) => row.x === x);
+}
+
+export function getClosestRowForX(rows: WhoLmsRow[], x: number): WhoLmsRow | undefined {
+  if (!rows.length) return undefined;
+
+  return rows.reduce((prev, curr) =>
+    Math.abs(curr.x - x) < Math.abs(prev.x - x) ? curr : prev
+  );
 }
 
 export function calculateWhoPercentileFromRow(
@@ -53,7 +61,7 @@ export function calculateWhoPercentileFromRow(
   const percentile = zScoreToPercentile(zScore);
 
   return {
-    month: row.month,
+    x: row.x,
     value,
     zScore: round2(zScore),
     percentile: round1(percentile),

@@ -8,11 +8,13 @@ const FILE_MAP: Record<WhoSex, Record<WhoMeasure, string>> = {
     weight: "WHO-Boys-Weight-for-age-Percentiles.csv",
     length: "WHO-Boys-Length-for-age-Percentiles.csv",
     head: "WHO-Boys-Head-Circumference-for-age-Percentiles.csv",
+    weightForLength: "WHO-Boys-Weight-for-length-Percentiles.csv",
   },
   girls: {
     weight: "WHO-Girls-Weight-for-age-Percentiles.csv",
     length: "WHO-Girls-Length-for-age-Percentiles.csv",
     head: "WHO-Girls-Head-Circumference-for-age-Percentiles.csv",
+    weightForLength: "WHO-Girls-Weight-for-length-Percentiles.csv",
   },
 };
 

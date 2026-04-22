@@ -1,7 +1,8 @@
 import { loadWhoCsv } from "./loadWhoCsv";
 import {
   calculateWhoPercentileFromRow,
-  getRowForMonth,
+  getClosestRowForX,
+  getRowForX,
 } from "./lms";
 import type {
   WhoCalculationResult,
@@ -12,17 +13,40 @@ import type {
 export async function calculateWhoPercentile(params: {
   sex: WhoSex;
   measure: WhoMeasure;
-  month: number;
+  x: number;
   value: number;
 }): Promise<WhoCalculationResult> {
-  const { sex, measure, month, value } = params;
+  const { sex, measure, x, value } = params;
 
   const rows = await loadWhoCsv(sex, measure);
-  const row = getRowForMonth(rows, month);
+
+  const row =
+    measure === "weightForLength"
+      ? getClosestRowForX(rows, x)
+      : getRowForX(rows, x);
 
   if (!row) {
-    throw new Error(`No WHO row found for month ${month}, sex ${sex}, measure ${measure}.`);
+    throw new Error(`No WHO row found for x=${x}, sex=${sex}, measure=${measure}.`);
   }
 
   return calculateWhoPercentileFromRow(row, value);
+}
+
+export function interpretPercentile(percentile: number): {
+  label: string;
+  tone: "red" | "amber" | "green" | "blue";
+} {
+  if (percentile < 3) {
+    return { label: "Molto basso", tone: "red" };
+  }
+  if (percentile < 10) {
+    return { label: "Basso", tone: "amber" };
+  }
+  if (percentile <= 90) {
+    return { label: "Nella norma", tone: "green" };
+  }
+  if (percentile <= 97) {
+    return { label: "Alto", tone: "blue" };
+  }
+  return { label: "Molto alto", tone: "blue" };
 }
