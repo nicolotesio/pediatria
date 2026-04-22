@@ -7,26 +7,35 @@ export async function POST(req: NextRequest) {
 
     const { sex, month, weight, length, head } = body;
 
-    const weightResult = await calculateWhoPercentile({
-      sex,
-      measure: "weight",
-      month,
-      value: weight,
-    });
+    const weightResult =
+      weight !== null && weight !== undefined
+        ? await calculateWhoPercentile({
+            sex,
+            measure: "weight",
+            month,
+            value: weight,
+          })
+        : null;
 
-    const lengthResult = await calculateWhoPercentile({
-      sex,
-      measure: "length",
-      month,
-      value: length,
-    });
+    const lengthResult =
+      length !== null && length !== undefined
+        ? await calculateWhoPercentile({
+            sex,
+            measure: "length",
+            month,
+            value: length,
+          })
+        : null;
 
-    const headResult = await calculateWhoPercentile({
-      sex,
-      measure: "head",
-      month,
-      value: head,
-    });
+    const headResult =
+      head !== null && head !== undefined
+        ? await calculateWhoPercentile({
+            sex,
+            measure: "head",
+            month,
+            value: head,
+          })
+        : null;
 
     return NextResponse.json({
       weight: weightResult,

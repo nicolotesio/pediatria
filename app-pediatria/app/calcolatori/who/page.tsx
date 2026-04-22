@@ -3,56 +3,93 @@
 import { useState } from "react";
 import Link from "next/link";
 
+type WhoResult = {
+  month: number;
+  value: number;
+  zScore: number;
+  percentile: number;
+  l: number;
+  m: number;
+  s: number;
+} | null;
+
+type ApiResponse = {
+  weight: WhoResult;
+  length: WhoResult;
+  head: WhoResult;
+  error?: string;
+};
+
 export default function WHOPage() {
   const [sex, setSex] = useState<"boys" | "girls">("boys");
   const [month, setMonth] = useState(6);
-  const [weight, setWeight] = useState(7);
-  const [length, setLength] = useState(65);
-  const [head, setHead] = useState(42);
 
-  const [result, setResult] = useState<any>(null);
+  const [weight, setWeight] = useState("7");
+  const [length, setLength] = useState("65");
+  const [head, setHead] = useState("42");
+
+  const [result, setResult] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleCalculate() {
     setLoading(true);
 
-    const res = await fetch("/api/who", {
-      method: "POST",
-      body: JSON.stringify({
-        sex,
-        month,
-        weight,
-        length,
-        head,
-      }),
-    });
+    const weightNum = weight.trim() === "" ? null : Number(weight);
+    const lengthNum = length.trim() === "" ? null : Number(length);
+    const headNum = head.trim() === "" ? null : Number(head);
 
-    const data = await res.json();
-    setResult(data);
-    setLoading(false);
+    try {
+      const res = await fetch("/api/who", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sex,
+          month,
+          weight: weightNum,
+          length: lengthNum,
+          head: headNum,
+        }),
+      });
+
+      const data = await res.json();
+      setResult(data);
+    } catch (error) {
+      console.error(error);
+      setResult(null);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       <div className="mx-auto max-w-5xl p-6">
-
         <div className="mb-6">
-          <Link href="/calcolatori" className="text-sm text-slate-500">
+          <Link
+            href="/calcolatori"
+            className="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+          >
             ← Torna ai calcolatori
           </Link>
         </div>
 
-        <h1 className="text-4xl font-bold">📈 Centili WHO</h1>
+        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+          📈 Centili WHO 0–2 anni
+        </h1>
 
-        {/* INPUT */}
-        <div className="mt-6 rounded-3xl bg-white p-5 dark:bg-slate-900 space-y-4">
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          Peso, lunghezza e circonferenza cranica per età
+        </p>
 
+        <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4">
           <div>
-            <label>Sesso</label>
+            <label className="text-sm font-medium">Sesso</label>
             <select
               value={sex}
-              onChange={(e) => setSex(e.target.value as any)}
-              className="mt-1 w-full rounded-lg border p-2"
+              onChange={(e) => setSex(e.target.value as "boys" | "girls")}
+              className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
             >
               <option value="boys">Maschio</option>
               <option value="girls">Femmina</option>
@@ -60,63 +97,70 @@ export default function WHOPage() {
           </div>
 
           <div>
-            <label>Età (mesi): {month}</label>
+            <label className="text-sm font-medium">Età (mesi): {month}</label>
             <input
               type="range"
               min={0}
               max={24}
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}
-              className="w-full"
+              className="mt-2 w-full"
             />
+            <div className="mt-1 flex justify-between text-xs text-slate-500 dark:text-slate-400">
+              <span>0</span>
+              <span>24</span>
+            </div>
           </div>
 
           <div>
-            <label>Peso (kg)</label>
+            <label className="text-sm font-medium">Peso (kg)</label>
             <input
               type="number"
+              inputMode="decimal"
+              placeholder="es. 7.5"
               value={weight}
-              onChange={(e) => setWeight(Number(e.target.value))}
-              className="mt-1 w-full rounded-lg border p-2"
+              onChange={(e) => setWeight(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
 
           <div>
-            <label>Lunghezza (cm)</label>
+            <label className="text-sm font-medium">Lunghezza (cm)</label>
             <input
               type="number"
+              inputMode="decimal"
+              placeholder="es. 65"
               value={length}
-              onChange={(e) => setLength(Number(e.target.value))}
-              className="mt-1 w-full rounded-lg border p-2"
+              onChange={(e) => setLength(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
 
           <div>
-            <label>Circonferenza cranica (cm)</label>
+            <label className="text-sm font-medium">Circonferenza cranica (cm)</label>
             <input
               type="number"
+              inputMode="decimal"
+              placeholder="es. 42"
               value={head}
-              onChange={(e) => setHead(Number(e.target.value))}
-              className="mt-1 w-full rounded-lg border p-2"
+              onChange={(e) => setHead(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
 
           <button
             onClick={handleCalculate}
-            className="mt-4 w-full rounded-xl bg-blue-600 text-white py-3 font-semibold"
+            className="mt-2 w-full rounded-xl bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700"
           >
             {loading ? "Calcolo..." : "Calcola"}
           </button>
         </div>
 
-        {/* RISULTATI */}
         {result && (
           <div className="mt-6 space-y-4">
-
             <ResultCard title="Peso" data={result.weight} />
             <ResultCard title="Lunghezza" data={result.length} />
             <ResultCard title="Circonferenza cranica" data={result.head} />
-
           </div>
         )}
       </div>
@@ -124,14 +168,31 @@ export default function WHOPage() {
   );
 }
 
-function ResultCard({ title, data }: any) {
+function ResultCard({
+  title,
+  data,
+}: {
+  title: string;
+  data: WhoResult;
+}) {
+  if (!data) {
+    return (
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <p className="text-sm text-slate-500 dark:text-slate-400">{title}</p>
+        <p className="mt-2 text-lg text-slate-400 dark:text-slate-500">
+          Calcolo non disponibile
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-3xl bg-white p-5 shadow dark:bg-slate-900">
-      <p className="text-sm text-slate-500">{title}</p>
-      <p className="text-2xl font-bold">
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <p className="text-sm text-slate-500 dark:text-slate-400">{title}</p>
+      <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
         {data.percentile}°
       </p>
-      <p className="text-sm text-slate-400">
+      <p className="mt-1 text-sm text-slate-400 dark:text-slate-500">
         z-score: {data.zScore}
       </p>
     </div>
