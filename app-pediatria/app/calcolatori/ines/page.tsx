@@ -27,7 +27,6 @@ export default function InesPage() {
   const [sesso, setSesso] = useState<"M" | "F">("M");
   const [primogenito, setPrimogenito] = useState<"SI" | "NO">("SI");
   
-  // Usiamo string per permettere all'utente di cancellare il numero nel campo di testo
   const [egWeeks, setEgWeeks] = useState<string>("40");
   const [egDays, setEgDays] = useState<string>("0");
 
@@ -84,7 +83,6 @@ export default function InesPage() {
     setError(null);
     setResult(null);
 
-    // Validazione Settimane (Obbligatorie)
     if (!egWeeks || egWeeks.trim() === "") {
       setError("Impossibile eseguire il calcolo: inserire le settimane.");
       return;
@@ -96,7 +94,6 @@ export default function InesPage() {
       return;
     }
 
-    // Gestione Giorni: se vuoto, calcola come +3 giorni
     let daysNum: number;
     if (!egDays || egDays.trim() === "") {
       daysNum = 3;
@@ -104,7 +101,6 @@ export default function InesPage() {
       daysNum = Number(egDays);
     }
 
-    // Validazione Giorni
     const maxDays = weeksNum === 42 ? 0 : 6;
     if (isNaN(daysNum) || daysNum < 0 || daysNum > maxDays) {
       setError(weeksNum === 42 
@@ -226,9 +222,6 @@ export default function InesPage() {
                 />
               </div>
             </div>
-            <p className="mt-2 text-[10px] text-slate-500 italic">
-              * Se i giorni sono vuoti, viene calcolato come +3 giorni (metà settimana).
-            </p>
           </div>
 
           <div>
@@ -277,7 +270,8 @@ export default function InesPage() {
 
           <button
             onClick={handleCalculate}
-            className="mt-2 w-full rounded-xl bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700"
+            disabled={loading}
+            className="mt-2 w-full rounded-xl bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
           >
             {loading ? "Calcolo..." : "Calcola"}
           </button>
@@ -285,9 +279,9 @@ export default function InesPage() {
 
         {result && (
           <div className="mt-6 space-y-4">
-            <ResultRow title="Peso" data={result.peso} unit="g" />
-            <ResultRow title="Lunghezza" data={result.lunghezza} unit="cm" />
-            <ResultRow title="Circonferenza cranica" data={result.cc} unit="cm" />
+            {result.peso && <ResultRow title="Peso" data={result.peso} unit="g" />}
+            {result.lunghezza && <ResultRow title="Lunghezza" data={result.lunghezza} unit="cm" />}
+            {result.cc && <ResultRow title="Circonferenza cranica" data={result.cc} unit="cm" />}
           </div>
         )}
       </div>
@@ -298,8 +292,7 @@ export default function InesPage() {
 function formatDs(zScore: number): string {
   const rounded = Math.round(zScore * 10) / 10;
   if (rounded === 0) return "0 DS";
-  if (rounded > 0) return `+${rounded} DS`;
-  return `${rounded} DS`;
+  return rounded > 0 ? `+${rounded} DS` : `${rounded} DS`;
 }
 
 function ResultRow({ title, data, unit }: { title: string; data: InesResult; unit: string }) {
@@ -311,12 +304,16 @@ function ResultRow({ title, data, unit }: { title: string; data: InesResult; uni
         <div className="min-w-0 sm:max-w-[60%]">
           <p className="text-base font-semibold text-slate-900 dark:text-slate-100">{title}</p>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            {data.displayValue} {unit}
+            {data.value} {unit}
           </p>
         </div>
         <div className="shrink-0 sm:text-right">
-          <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 sm:text-3xl">{data.percentile}°</p>
-          <p className="mt-1 text-base font-medium text-slate-500 dark:text-slate-400">{formatDs(data.zScore)}</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 sm:text-3xl">
+            {data.percentile}° centile
+          </p>
+          <p className="mt-1 text-base font-medium text-slate-500 dark:text-slate-400">
+            {formatDs(data.zScore)}
+          </p>
         </div>
       </div>
     </div>

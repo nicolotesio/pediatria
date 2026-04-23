@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { calculateInesPercentile } from "@/lib/ines/calculateInes";
+import { calculateInes } from "@/lib/ines/calculateInes";
 
 function formatValue(value: number, type: "peso" | "lunghezza" | "cc"): string {
   if (type === "peso") {
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
     const pesoResult =
       peso !== null && peso !== undefined
-        ? await calculateInesPercentile({
+        ? await calculateInes({
             measure: "peso",
             egWeeks,
             egDays,
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
     const lunghezzaResult =
       lunghezza !== null && lunghezza !== undefined
-        ? await calculateInesPercentile({
+        ? await calculateInes({
             measure: "lunghezza",
             egWeeks,
             egDays,
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     const ccResult =
       cc !== null && cc !== undefined
-        ? await calculateInesPercentile({
+        ? await calculateInes ({
             measure: "cc",
             egWeeks,
             egDays,

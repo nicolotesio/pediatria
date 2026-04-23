@@ -1,107 +1,92 @@
-import { loadInesCsv } from "./loadInesCsv";
-import {
-  calculateZScore,
-  zScoreToPercentile,
-} from "../who/lms";
-import type {
-  InesCalculationResult,
-  InesMeasure,
-  InesSex,
-  InesPrimogenito,
-  InesLmsRow,
-} from "./types";
+import { InesData, InesResult } from "./types";
 
-export async function calculateInesPercentile(params: {
-  measure: InesMeasure;
-  egWeeks: number;
-  egDays: number;
-  egFraction?: number;
-  sesso: InesSex;
-  primogenito: InesPrimogenito;
-  value: number;
-}): Promise<InesCalculationResult> {
-  const { measure, egWeeks, egDays, egFraction, sesso, primogenito, value } = params;
+/**
+ * Calcola i parametri LMS interpolati o estrapolati per un'età gestazionale esatta.
+ * Gestisce nodi a metà settimana (23.5, 24.5, ...) e linearizzazione sotto 23.5.
+ */
+function getInterpolatedLMS(data: InesData[], eg: number) {
+  // Ordina i dati per EG
+  const sortedData = [...data].sort((a, b) => a.eg - b.eg);
+  
+  if (eg < sortedData[0].eg) {
+    // Linearizzazione (Estrapolazione) per EG tra 23.0 e 23.5
+    // Utilizza la pendenza tra i primi due nodi (23.5 e 24.5)
+    const p1 = sortedData[0];
+    const p2 = sortedData[1];
+    const diffEg = p2.eg - p1.eg;
 
-  const rows = await loadInesCsv(measure);
+    const extrapolate = (val1: number, val2: number) => {
+      const slope = (val2 - val1) / diffEg;
+      return val1 + slope * (eg - p1.eg);
+    };
 
-  // Se non c'è frazione (cioè egDays = 0), usa direttamente la riga per egWeeks
-  if (egDays === 0) {
-    const row = getRowForInes(rows, egWeeks, sesso, primogenito);
-    if (!row) {
-      throw new Error(
-        `No INES row found for EG=${egWeeks}, sesso=${sesso}, primogenito=${primogenito}, measure=${measure}.`
-      );
+    return {
+      L: extrapolate(p1.L, p2.L),
+      M: extrapolate(p1.M, p2.M),
+      S: extrapolate(p1.S, p2.S),
+    };
+  }
+
+  // Interpolazione lineare standard per EG >= 23.5
+  for (let i = 0; i < sortedData.length - 1; i++) {
+    const p1 = sortedData[i];
+    const p2 = sortedData[i + 1];
+
+    if (eg >= p1.eg && eg <= p2.eg) {
+      const t = (eg - p1.eg) / (p2.eg - p1.eg);
+      const interpolate = (v1: number, v2: number) => v1 + t * (v2 - v1);
+
+      return {
+        L: interpolate(p1.L, p2.L),
+        M: interpolate(p1.M, p2.M),
+        S: interpolate(p1.S, p2.S),
+      };
     }
-    return calculateInesPercentileFromRow(row, value, egWeeks);
   }
 
-  // Altrimenti, interpola tra egWeeks e egWeeks+1
-  const row1 = getRowForInes(rows, egWeeks, sesso, primogenito);
-  const row2 = getRowForInes(rows, egWeeks + 1, sesso, primogenito);
-
-  if (!row1 || !row2) {
-    throw new Error(
-      `No INES rows found for interpolation at EG=${egWeeks}-${egWeeks + 1}, sesso=${sesso}, primogenito=${primogenito}, measure=${measure}.`
-    );
-  }
-
-  // Interpola i parametri LMS tra i due punti
-  const interpolatedRow = interpolateLmsRows(row1, row2, egDays / 7);
-  return calculateInesPercentileFromRow(interpolatedRow, value, egFraction || egWeeks);
+  // Se fuori range superiore, restituisce l'ultimo punto
+  const last = sortedData[sortedData.length - 1];
+  return { L: last.L, M: last.M, S: last.S };
 }
 
-function interpolateLmsRows(
-  row1: InesLmsRow,
-  row2: InesLmsRow,
-  fraction: number
-): InesLmsRow {
-  // Interpola linearmente i parametri L, M, S
-  return {
-    eg: Math.round((row1.eg + (row2.eg - row1.eg) * fraction) * 1000) / 1000,
-    sesso: row1.sesso,
-    primogenito: row1.primogenito,
-    l: row1.l + (row2.l - row1.l) * fraction,
-    m: row1.m + (row2.m - row1.m) * fraction,
-    s: row1.s + (row2.s - row1.s) * fraction,
-  };
-}
-
-export function getRowForInes(
-  rows: InesLmsRow[],
-  eg: number,
-  sesso: InesSex,
-  primogenito: InesPrimogenito
-): InesLmsRow | undefined {
-  return rows.find(
-    (row) => row.eg === eg && row.sesso === sesso && row.primogenito === primogenito
-  );
-}
-
-export function calculateInesPercentileFromRow(
-  row: InesLmsRow,
+export function calculateInes(
   value: number,
-  displayEg?: number
-): InesCalculationResult {
-  const zScore = calculateZScore(value, row.l, row.m, row.s);
-  const percentile = zScoreToPercentile(zScore);
+  data: InesData[],
+  egWeeks: number,
+  egDays: number
+): InesResult {
+  const egDecimal = egWeeks + egDays / 7;
+
+  // Range accettato: 23+0 (23.0) a 42+3 (42.428)
+  if (egDecimal < 23.0 || egDecimal > 42.43) {
+    throw new Error("Età gestazionale fuori range (23+0 - 42+3)");
+  }
+
+  const { L, M, S } = getInterpolatedLMS(data, egDecimal);
+
+  // Formula LMS per Z-Score
+  let z: number;
+  if (Math.abs(L) < 0.01) {
+    z = Math.log(value / M) / S;
+  } else {
+    z = (Math.pow(value / M, L) - 1) / (L * S);
+  }
+
+  // Calcolo Percentile usando la funzione di ripartizione normale
+  const percentile = normalCDF(z) * 100;
 
   return {
-    eg: displayEg || row.eg,
-    sesso: row.sesso,
-    primogenito: row.primogenito,
-    value,
-    zScore: round2(zScore),
-    percentile: round1(percentile),
-    l: row.l,
-    m: row.m,
-    s: row.s,
+    zScore: parseFloat(z.toFixed(2)),
+    percentile: parseFloat(percentile.toFixed(1)),
+    l: L,
+    m: M,
+    s: S,
   };
 }
 
-function round1(value: number): number {
-  return Math.round(value * 10) / 10;
-}
-
-function round2(value: number): number {
-  return Math.round(value * 100) / 100;
+function normalCDF(x: number): number {
+  const t = 1 / (1 + 0.2316419 * Math.abs(x));
+  const d = 0.3989423 * Math.exp((-x * x) / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.7814779 + t * (-1.821256 + t * 1.330274))));
+  return x > 0 ? 1 - p : p;
 }
