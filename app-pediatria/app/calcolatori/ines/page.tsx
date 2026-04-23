@@ -1,197 +1,146 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import Link from "next/link";
+
+type InesResult = {
+  displayValue: string;
+  zScore: number;
+  percentile: number;
+} | null;
+
+type ApiResponse = {
+  peso: InesResult;
+  lunghezza: InesResult;
+  cc: InesResult;
+  error?: string;
+};
 
 export default function InesPage() {
-  const [settimane, setSettimane] = useState<string>("");
-  const [giorni, setGiorni] = useState<string>("");
   const [sesso, setSesso] = useState<"M" | "F">("M");
-  const [peso, setPeso] = useState<string>("");
-  const [lunghezza, setLunghezza] = useState<string>("");
-  const [cc, setCc] = useState<string>("");
-  const [risultati, setRisultati] = useState<any>(null);
+  const [egWeeks, setEgWeeks] = useState<string>("40");
+  const [egDays, setEgDays] = useState<string>("0");
+  const [peso, setPeso] = useState("3500");
+  const [lunghezza, setLunghezza] = useState("50.0");
+  const [cc, setCc] = useState("34.0");
+
+  const [result, setResult] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const calcolaPercentili = async () => {
-    // Validazione settimane (obbligatorie)
-    if (!settimane || parseInt(settimane) < 23 || parseInt(settimane) > 42) {
-      setError("Inserisci le settimane (range 23-42)");
+  async function handleCalculate() {
+    setError(null);
+    if (!egWeeks || egWeeks.trim() === "") {
+      setError("Inserire le settimane (23-42)");
+      return;
+    }
+
+    const weeksNum = parseInt(egWeeks);
+    const daysNum = egDays === "" ? 3 : parseInt(egDays);
+
+    if (weeksNum < 23 || weeksNum > 42) {
+      setError("Settimane non valide (23-42)");
       return;
     }
 
     setLoading(true);
-    setError(null);
-
-    // Se i giorni sono vuoti, usiamo il valore predefinito 3
-    const giorniVal = giorni === "" ? "3" : giorni;
-
     try {
       const res = await fetch("/api/ines", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          settimane: parseInt(settimane),
-          giorni: parseInt(giorniVal),
           sesso,
-          peso: peso ? parseFloat(peso) : undefined,
-          lunghezza: lunghezza ? parseFloat(lunghezza) : undefined,
-          cc: cc ? parseFloat(cc) : undefined,
+          primogenito: "SI",
+          egWeeks: weeksNum,
+          egDays: daysNum,
+          peso: parseFloat(peso),
+          lunghezza: parseFloat(lunghezza),
+          cc: parseFloat(cc),
         }),
       });
 
       const data = await res.json();
-      if (data.error) {
-        setError(data.error);
-      } else {
-        setRisultati(data);
-      }
+      if (data.error) setError(data.error);
+      else setResult(data);
     } catch (err) {
-      setError("Errore nel calcolo");
+      setError("Errore di connessione");
     } finally {
       setLoading(false);
     }
-  };
-
-  // Trigger calcolo automatico quando cambiano i valori principali
-  useEffect(() => {
-    if (settimane) {
-      calcolaPercentili();
-    }
-  }, [settimane, giorni, sesso, peso, lunghezza, cc]);
+  }
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl">
-      <Card className="shadow-lg border-t-4 border-t-blue-500">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-2xl font-bold text-center text-blue-600">
-            Calcolatore INeS
-          </CardTitle>
-          <p className="text-center text-sm text-slate-500 italic">
-            Italian Neonatal Study - Curve di crescita neonatali
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          
-          {/* Sezione Età Gestazionale */}
-          <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl space-y-3">
-            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Età Gestazionale</h3>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <input
-                  type="number"
-                  placeholder="Settimane (23-42)"
-                  value={settimane}
-                  onChange={(e) => setSettimane(e.target.value)}
-                  className="w-full rounded-xl border p-4 text-lg focus:ring-2 focus:ring-blue-500 outline-none dark:bg-slate-950"
-                />
+    <main className="min-h-screen bg-slate-50 p-6 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+      <div className="mx-auto max-w-md">
+        <Link href="/calcolatori" className="text-sm text-slate-500 mb-4 block">← Torna indietro</Link>
+        
+        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl p-6 border border-slate-200 dark:border-slate-800">
+          <h1 className="text-2xl font-bold text-center mb-6 text-blue-600">Centili INeS</h1>
+
+          <div className="space-y-4">
+            {/* EG */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase px-1">Settimane</label>
+                <input type="number" value={egWeeks} onChange={(e) => setEgWeeks(e.target.value)} className="w-full p-3 rounded-xl border dark:bg-slate-950" />
               </div>
-              <div className="flex-1">
-                <input
-                  type="number"
-                  placeholder="Giorni (+3 default)"
-                  value={giorni}
-                  onChange={(e) => setGiorni(e.target.value)}
-                  className="w-full rounded-xl border p-4 text-lg focus:ring-2 focus:ring-blue-500 outline-none dark:bg-slate-950"
-                />
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase px-1">Giorni (+3 default)</label>
+                <input type="number" value={egDays} onChange={(e) => setEgDays(e.target.value)} className="w-full p-3 rounded-xl border dark:bg-slate-950" />
               </div>
             </div>
-          </div>
 
-          {/* Sezione Sesso */}
-          <div className="flex justify-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-            <button
-              onClick={() => setSesso("M")}
-              className={`flex-1 py-3 px-6 rounded-lg font-bold transition-all ${
-                sesso === "M" ? "bg-blue-500 text-white shadow-md" : "text-slate-500"
-              }`}
-            >
-              MASCHIO
-            </button>
-            <button
-              onClick={() => setSesso("F")}
-              className={`flex-1 py-3 px-6 rounded-lg font-bold transition-all ${
-                sesso === "F" ? "bg-pink-500 text-white shadow-md" : "text-slate-500"
-              }`}
-            >
-              FEMMINA
+            {/* Sesso */}
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+              <button onClick={() => setSesso("M")} className={`flex-1 py-2 rounded-lg font-bold ${sesso === "M" ? "bg-blue-500 text-white" : "text-slate-500"}`}>M</button>
+              <button onClick={() => setSesso("F")} className={`flex-1 py-2 rounded-lg font-bold ${sesso === "F" ? "bg-pink-500 text-white" : "text-slate-500"}`}>F</button>
+            </div>
+
+            {/* Misure sulla stessa riga */}
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase text-center block">Peso (g)</label>
+                <input type="number" value={peso} onChange={(e) => setPeso(e.target.value)} className="w-full p-2 rounded-lg border text-center dark:bg-slate-950" />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase text-center block">Lung (cm)</label>
+                <input type="number" step="0.1" value={lunghezza} onChange={(e) => setLunghezza(e.target.value)} className="w-full p-2 rounded-lg border text-center dark:bg-slate-950" />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase text-center block">CC (cm)</label>
+                <input type="number" step="0.1" value={cc} onChange={(e) => setCc(e.target.value)} className="w-full p-2 rounded-lg border text-center dark:bg-slate-950" />
+              </div>
+            </div>
+
+            {error && <p className="text-red-500 text-center text-sm">{error}</p>}
+
+            <button onClick={handleCalculate} disabled={loading} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50">
+              {loading ? "Calcolo..." : "CALCOLA"}
             </button>
           </div>
 
-          {/* Sezione Misure - TUTTE SULLA STESSA RIGA */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase font-bold text-slate-500 ml-1">Peso (g)</label>
-              <input
-                type="number"
-                placeholder="g"
-                value={peso}
-                onChange={(e) => setPeso(e.target.value)}
-                className="w-full rounded-xl border p-3 text-center focus:ring-2 focus:ring-blue-500 outline-none dark:bg-slate-950"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase font-bold text-slate-500 ml-1">Lung. (cm)</label>
-              <input
-                type="number"
-                step="0.1"
-                placeholder="cm"
-                value={lunghezza}
-                onChange={(e) => setLunghezza(e.target.value)}
-                className="w-full rounded-xl border p-3 text-center focus:ring-2 focus:ring-blue-500 outline-none dark:bg-slate-950"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase font-bold text-slate-500 ml-1">CC (cm)</label>
-              <input
-                type="number"
-                step="0.1"
-                placeholder="cm"
-                value={cc}
-                onChange={(e) => setCc(e.target.value)}
-                className="w-full rounded-xl border p-3 text-center focus:ring-2 focus:ring-blue-500 outline-none dark:bg-slate-950"
-              />
-            </div>
-          </div>
-
-          {error && (
-            <div className="p-3 bg-red-100 text-red-700 rounded-xl text-center text-sm font-medium">
-              {error}
+          {result && (
+            <div className="mt-8 space-y-3 border-t pt-6">
+              <ResultBox title="Peso" res={result.peso} color="blue" />
+              <ResultBox title="Lunghezza" res={result.lunghezza} color="emerald" />
+              <ResultBox title="Circonferenza" res={result.cc} color="purple" />
             </div>
           )}
+        </div>
+      </div>
+    </main>
+  );
+}
 
-          {/* Risultati */}
-          {risultati && (
-            <div className="grid grid-cols-1 gap-4 pt-4 border-t">
-              {risultati.peso && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-2xl flex justify-between items-center">
-                  <span className="font-bold text-blue-700 dark:text-blue-300">Percentile Peso:</span>
-                  <span className="text-2xl font-black text-blue-800 dark:text-blue-100">
-                    {risultati.peso.percentile}°
-                  </span>
-                </div>
-              )}
-              {risultati.lunghezza && (
-                <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-2xl flex justify-between items-center">
-                  <span className="font-bold text-emerald-700 dark:text-emerald-300">Percentile Lunghezza:</span>
-                  <span className="text-2xl font-black text-emerald-800 dark:text-emerald-100">
-                    {risultati.lunghezza.percentile}°
-                  </span>
-                </div>
-              )}
-              {risultati.cc && (
-                <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-2xl flex justify-between items-center">
-                  <span className="font-bold text-purple-700 dark:text-purple-300">Percentile CC:</span>
-                  <span className="text-2xl font-black text-purple-800 dark:text-purple-100">
-                    {risultati.cc.percentile}°
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+function ResultBox({ title, res, color }: { title: string, res: InesResult, color: string }) {
+  if (!res) return null;
+  return (
+    <div className={`p-4 rounded-2xl flex justify-between items-center bg-${color}-50 dark:bg-${color}-900/20`}>
+      <span className="font-bold">{title}</span>
+      <div className="text-right">
+        <p className="text-2xl font-black">{res.percentile}°</p>
+        <p className="text-xs opacity-60">{res.zScore.toFixed(1)} DS</p>
+      </div>
     </div>
   );
 }
