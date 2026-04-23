@@ -38,6 +38,19 @@ export default function CalcolatoriPage() {
             </p>
           </Link>
 
+          <Link
+            href="/calcolatori/ines"
+            className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+          >
+            <h2 className="text-2xl font-semibold">
+              👶 INeS Neonatali
+            </h2>
+
+            <p className="mt-3 text-base text-slate-600 dark:text-slate-300">
+              Centili per neonati italiani 24–42 settimane EG
+            </p>
+          </Link>
+
         </div>
       </div>
     </main>
