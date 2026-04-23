@@ -26,8 +26,10 @@ type ApiResponse = {
 export default function InesPage() {
   const [sesso, setSesso] = useState<"M" | "F">("M");
   const [primogenito, setPrimogenito] = useState<"SI" | "NO">("SI");
-  const [egWeeks, setEgWeeks] = useState(40);
-  const [egDays, setEgDays] = useState(0);
+  
+  // Usiamo string per permettere all'utente di cancellare il numero nel campo di testo
+  const [egWeeks, setEgWeeks] = useState<string>("40");
+  const [egDays, setEgDays] = useState<string>("0");
 
   const [peso, setPeso] = useState("3500");
   const [lunghezza, setLunghezza] = useState("50.0");
@@ -37,16 +39,12 @@ export default function InesPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const maxDays = egWeeks === 42 ? 0 : 6;
-
   function handlePesoChange(value: string) {
-    // Accetta solo numeri, no virgole
     const cleaned = value.replace(/[^0-9]/g, "");
     setPeso(cleaned);
   }
 
   function handleLunghezzaChange(value: string) {
-    // Accetta max 1 cifra decimale
     const cleaned = value.replace(/,/g, ".");
     if (cleaned === "" || cleaned === ".") {
       setLunghezza(cleaned);
@@ -57,17 +55,14 @@ export default function InesPage() {
       setLunghezza(parts[0] + "." + parts[1]);
       return;
     }
-    if (parts.length === 2) {
-      if (parts[1].length > 1) {
-        setLunghezza(parts[0] + "." + parts[1][0]);
-        return;
-      }
+    if (parts.length === 2 && parts[1].length > 1) {
+      setLunghezza(parts[0] + "." + parts[1][0]);
+      return;
     }
     setLunghezza(cleaned);
   }
 
   function handleCcChange(value: string) {
-    // Accetta max 1 cifra decimale
     const cleaned = value.replace(/,/g, ".");
     if (cleaned === "" || cleaned === ".") {
       setCc(cleaned);
@@ -78,50 +73,62 @@ export default function InesPage() {
       setCc(parts[0] + "." + parts[1]);
       return;
     }
-    if (parts.length === 2) {
-      if (parts[1].length > 1) {
-        setCc(parts[0] + "." + parts[1][0]);
-        return;
-      }
+    if (parts.length === 2 && parts[1].length > 1) {
+      setCc(parts[0] + "." + parts[1][0]);
+      return;
     }
     setCc(cleaned);
   }
 
   async function handleCalculate() {
     setError(null);
+    setResult(null);
+
+    // Validazione Settimane (Obbligatorie)
+    if (!egWeeks || egWeeks.trim() === "") {
+      setError("Impossibile eseguire il calcolo: inserire le settimane.");
+      return;
+    }
+
+    const weeksNum = Number(egWeeks);
+    if (isNaN(weeksNum) || weeksNum < 23 || weeksNum > 42) {
+      setError("Le settimane devono essere comprese tra 23 e 42.");
+      return;
+    }
+
+    // Gestione Giorni: se vuoto, calcola come +3 giorni
+    let daysNum: number;
+    if (!egDays || egDays.trim() === "") {
+      daysNum = 3;
+    } else {
+      daysNum = Number(egDays);
+    }
+
+    // Validazione Giorni
+    const maxDays = weeksNum === 42 ? 0 : 6;
+    if (isNaN(daysNum) || daysNum < 0 || daysNum > maxDays) {
+      setError(weeksNum === 42 
+        ? "A 42 settimane i giorni devono essere 0." 
+        : `I giorni devono essere compresi tra 0 e ${maxDays}.`
+      );
+      return;
+    }
+
     setLoading(true);
 
     const pesoNum = peso.trim() === "" ? null : Number(peso);
     const lunghezzaNum = lunghezza.trim() === "" ? null : Number(lunghezza);
     const ccNum = cc.trim() === "" ? null : Number(cc);
 
-    if (pesoNum !== null && (isNaN(pesoNum) || pesoNum <= 0)) {
-      setError("Peso non valido");
-      setLoading(false);
-      return;
-    }
-    if (lunghezzaNum !== null && (isNaN(lunghezzaNum) || lunghezzaNum <= 0)) {
-      setError("Lunghezza non valida");
-      setLoading(false);
-      return;
-    }
-    if (ccNum !== null && (isNaN(ccNum) || ccNum <= 0)) {
-      setError("Circonferenza cranica non valida");
-      setLoading(false);
-      return;
-    }
-
     try {
       const res = await fetch("/api/ines", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sesso,
           primogenito,
-          egWeeks,
-          egDays,
+          egWeeks: weeksNum,
+          egDays: daysNum,
           peso: pesoNum,
           pesoDisplay: peso,
           lunghezza: lunghezzaNum,
@@ -134,14 +141,12 @@ export default function InesPage() {
       const data = await res.json();
       if (data.error) {
         setError(data.error);
-        setResult(null);
       } else {
         setResult(data);
       }
     } catch (err) {
       console.error(err);
       setError("Errore nel calcolo");
-      setResult(null);
     } finally {
       setLoading(false);
     }
@@ -198,45 +203,31 @@ export default function InesPage() {
             <label className="text-sm font-medium">Età gestazionale</label>
             <div className="mt-2 grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-slate-600 dark:text-slate-400">Settimane: {egWeeks}</label>
+                <label className="text-xs text-slate-600 dark:text-slate-400">Settimane (23-42)</label>
                 <input
-                  type="range"
-                  min={23}
-                  max={42}
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Settimane"
                   value={egWeeks}
-                  onChange={(e) => {
-                    const weeks = Number(e.target.value);
-                    setEgWeeks(weeks);
-                    if (weeks === 42 && egDays > 0) {
-                      setEgDays(0);
-                    }
-                  }}
-                  className="mt-1 w-full"
+                  onChange={(e) => setEgWeeks(e.target.value.replace(/[^0-9]/g, ""))}
+                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                 />
-                <div className="mt-1 flex justify-between text-xs text-slate-500 dark:text-slate-400">
-                  <span>23</span>
-                  <span>42</span>
-                </div>
               </div>
 
               <div>
-                <label className="text-xs text-slate-600 dark:text-slate-400">Giorni: {egDays}</label>
+                <label className="text-xs text-slate-600 dark:text-slate-400">Giorni (0-6 o vuoto)</label>
                 <input
-                  type="range"
-                  min={0}
-                  max={maxDays}
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="+3 (default)"
                   value={egDays}
-                  onChange={(e) => setEgDays(Number(e.target.value))}
-                  className="mt-1 w-full"
+                  onChange={(e) => setEgDays(e.target.value.replace(/[^0-9]/g, ""))}
+                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                 />
-                <div className="mt-1 flex justify-between text-xs text-slate-500 dark:text-slate-400">
-                  <span>0</span>
-                  <span>{maxDays}</span>
-                </div>
               </div>
             </div>
-            <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
-              EG: {egWeeks} settimane {egDays > 0 ? `+ ${egDays} giorni` : ""}
+            <p className="mt-2 text-[10px] text-slate-500 italic">
+              * Se i giorni sono vuoti, viene calcolato come +3 giorni (metà settimana).
             </p>
           </div>
 
@@ -252,30 +243,30 @@ export default function InesPage() {
             />
           </div>
 
-          <div>
-            <label className="text-sm font-medium">Lunghezza (cm)</label>
-            <input
-              type="text"
-              inputMode="decimal"
-              placeholder="es. 50.0"
-              value={lunghezza}
-              onChange={(e) => handleLunghezzaChange(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-            />
-          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium">Lunghezza (cm)</label>
+              <input
+                type="text"
+                inputMode="decimal"
+                placeholder="es. 50.0"
+                value={lunghezza}
+                onChange={(e) => handleLunghezzaChange(e.target.value)}
+                className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              />
+            </div>
 
-          <div>
-            <label className="text-sm font-medium">
-              Circonferenza cranica (cm)
-            </label>
-            <input
-              type="text"
-              inputMode="decimal"
-              placeholder="es. 34.0"
-              value={cc}
-              onChange={(e) => handleCcChange(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-            />
+            <div>
+              <label className="text-sm font-medium">Circonferenza (cm)</label>
+              <input
+                type="text"
+                inputMode="decimal"
+                placeholder="es. 34.0"
+                value={cc}
+                onChange={(e) => handleCcChange(e.target.value)}
+                className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              />
+            </div>
           </div>
 
           {error && (
@@ -306,63 +297,26 @@ export default function InesPage() {
 
 function formatDs(zScore: number): string {
   const rounded = Math.round(zScore * 10) / 10;
-
   if (rounded === 0) return "0 DS";
   if (rounded > 0) return `+${rounded} DS`;
   return `${rounded} DS`;
 }
 
-function ResultRow({
-  title,
-  data,
-  unit,
-}: {
-  title: string;
-  data: InesResult;
-  unit: string;
-}) {
-  if (!data) {
-    return (
-      <div className="rounded-3xl border border-slate-200 bg-white px-5 py-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
-          <div className="min-w-0 sm:max-w-[60%]">
-            <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
-              {title}
-            </p>
-            <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
-              Calcolo non disponibile
-            </p>
-          </div>
-
-          <div className="shrink-0 sm:text-right">
-            <p className="text-2xl font-bold text-slate-400 dark:text-slate-500 sm:text-3xl">
-              —
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+function ResultRow({ title, data, unit }: { title: string; data: InesResult; unit: string }) {
+  if (!data) return null;
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
         <div className="min-w-0 sm:max-w-[60%]">
-          <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
-            {title}
-          </p>
+          <p className="text-base font-semibold text-slate-900 dark:text-slate-100">{title}</p>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
             {data.displayValue} {unit}
           </p>
         </div>
-
         <div className="shrink-0 sm:text-right">
-          <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 sm:text-3xl">
-            {data.percentile}°
-          </p>
-          <p className="mt-1 text-base font-medium text-slate-500 dark:text-slate-400">
-            {formatDs(data.zScore)}
-          </p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 sm:text-3xl">{data.percentile}°</p>
+          <p className="mt-1 text-base font-medium text-slate-500 dark:text-slate-400">{formatDs(data.zScore)}</p>
         </div>
       </div>
     </div>

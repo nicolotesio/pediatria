@@ -5,7 +5,6 @@ function formatValue(value: number, type: "peso" | "lunghezza" | "cc"): string {
   if (type === "peso") {
     return Math.round(value).toString();
   }
-  // Per lunghezza e CC, mostra max 1 decimale senza trailing zeros
   const rounded = Math.round(value * 10) / 10;
   const str = rounded.toString();
   if (str.includes(".")) {
@@ -24,7 +23,6 @@ export async function POST(req: NextRequest) {
       primogenito,
       egWeeks,
       egDays,
-      egFraction,
       peso,
       pesoDisplay,
       lunghezza,
@@ -39,7 +37,6 @@ export async function POST(req: NextRequest) {
             measure: "peso",
             egWeeks,
             egDays,
-            egFraction,
             sesso,
             primogenito,
             value: peso,
@@ -52,7 +49,6 @@ export async function POST(req: NextRequest) {
             measure: "lunghezza",
             egWeeks,
             egDays,
-            egFraction,
             sesso,
             primogenito,
             value: lunghezza,
@@ -65,23 +61,15 @@ export async function POST(req: NextRequest) {
             measure: "cc",
             egWeeks,
             egDays,
-            egFraction,
             sesso,
             primogenito,
             value: cc,
           })
         : null;
 
-    // Aggiungi displayValue se disponibile
-    if (pesoResult) {
-      pesoResult.displayValue = pesoDisplay || formatValue(peso, "peso");
-    }
-    if (lunghezzaResult) {
-      lunghezzaResult.displayValue = lunghezzaDisplay || formatValue(lunghezza, "lunghezza");
-    }
-    if (ccResult) {
-      ccResult.displayValue = ccDisplay || formatValue(cc, "cc");
-    }
+    if (pesoResult) pesoResult.displayValue = pesoDisplay || formatValue(peso, "peso");
+    if (lunghezzaResult) lunghezzaResult.displayValue = lunghezzaDisplay || formatValue(lunghezza, "lunghezza");
+    if (ccResult) ccResult.displayValue = ccDisplay || formatValue(cc, "cc");
 
     return NextResponse.json({
       peso: pesoResult,
