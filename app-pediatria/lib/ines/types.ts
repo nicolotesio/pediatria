@@ -21,4 +21,5 @@ export type InesCalculationResult = {
   l: number;
   m: number;
   s: number;
+  displayValue?: string;
 };

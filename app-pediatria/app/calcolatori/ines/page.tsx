@@ -8,6 +8,7 @@ type InesResult = {
   sesso: string;
   primogenito: string;
   value: number;
+  displayValue: string;
   zScore: number;
   percentile: number;
   l: number;
@@ -25,21 +26,90 @@ type ApiResponse = {
 export default function InesPage() {
   const [sesso, setSesso] = useState<"M" | "F">("M");
   const [primogenito, setPrimogenito] = useState<"SI" | "NO">("SI");
-  const [eg, setEg] = useState(40);
+  const [egWeeks, setEgWeeks] = useState(40);
+  const [egDays, setEgDays] = useState(0);
 
   const [peso, setPeso] = useState("3500");
-  const [lunghezza, setLunghezza] = useState("50");
-  const [cc, setCc] = useState("34");
+  const [lunghezza, setLunghezza] = useState("50.0");
+  const [cc, setCc] = useState("34.0");
 
   const [result, setResult] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const maxDays = egWeeks === 42 ? 0 : 6;
+
+  function handlePesoChange(value: string) {
+    // Accetta solo numeri, no virgole
+    const cleaned = value.replace(/[^0-9]/g, "");
+    setPeso(cleaned);
+  }
+
+  function handleLunghezzaChange(value: string) {
+    // Accetta max 1 cifra decimale
+    const cleaned = value.replace(/,/g, ".");
+    if (cleaned === "" || cleaned === ".") {
+      setLunghezza(cleaned);
+      return;
+    }
+    const parts = cleaned.split(".");
+    if (parts.length > 2) {
+      setLunghezza(parts[0] + "." + parts[1]);
+      return;
+    }
+    if (parts.length === 2) {
+      if (parts[1].length > 1) {
+        setLunghezza(parts[0] + "." + parts[1][0]);
+        return;
+      }
+    }
+    setLunghezza(cleaned);
+  }
+
+  function handleCcChange(value: string) {
+    // Accetta max 1 cifra decimale
+    const cleaned = value.replace(/,/g, ".");
+    if (cleaned === "" || cleaned === ".") {
+      setCc(cleaned);
+      return;
+    }
+    const parts = cleaned.split(".");
+    if (parts.length > 2) {
+      setCc(parts[0] + "." + parts[1]);
+      return;
+    }
+    if (parts.length === 2) {
+      if (parts[1].length > 1) {
+        setCc(parts[0] + "." + parts[1][0]);
+        return;
+      }
+    }
+    setCc(cleaned);
+  }
 
   async function handleCalculate() {
+    setError(null);
     setLoading(true);
 
     const pesoNum = peso.trim() === "" ? null : Number(peso);
     const lunghezzaNum = lunghezza.trim() === "" ? null : Number(lunghezza);
     const ccNum = cc.trim() === "" ? null : Number(cc);
+
+    if (pesoNum !== null && (isNaN(pesoNum) || pesoNum <= 0)) {
+      setError("Peso non valido");
+      setLoading(false);
+      return;
+    }
+    if (lunghezzaNum !== null && (isNaN(lunghezzaNum) || lunghezzaNum <= 0)) {
+      setError("Lunghezza non valida");
+      setLoading(false);
+      return;
+    }
+    if (ccNum !== null && (isNaN(ccNum) || ccNum <= 0)) {
+      setError("Circonferenza cranica non valida");
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch("/api/ines", {
@@ -50,17 +120,27 @@ export default function InesPage() {
         body: JSON.stringify({
           sesso,
           primogenito,
-          eg,
+          egWeeks,
+          egDays,
           peso: pesoNum,
+          pesoDisplay: peso,
           lunghezza: lunghezzaNum,
+          lunghezzaDisplay: lunghezza,
           cc: ccNum,
+          ccDisplay: cc,
         }),
       });
 
       const data = await res.json();
-      setResult(data);
-    } catch (error) {
-      console.error(error);
+      if (data.error) {
+        setError(data.error);
+        setResult(null);
+      } else {
+        setResult(data);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Errore nel calcolo");
       setResult(null);
     } finally {
       setLoading(false);
@@ -80,15 +160,15 @@ export default function InesPage() {
         </div>
 
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-          👶 Centili INeS Neonatali
+          👶 Centili neonatali INeS
         </h1>
 
         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-          Peso, lunghezza e circonferenza cranica per neonati italiani (24–42 settimane EG)
+          Peso, lunghezza e circonferenza cranica per neonati italiani (23–42 settimane EG)
         </p>
 
         <div className="mt-6 space-y-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium">Sesso</label>
               <select
@@ -115,29 +195,59 @@ export default function InesPage() {
           </div>
 
           <div>
-            <label className="text-sm font-medium">Età gestazionale (settimane): {eg}</label>
-            <input
-              type="range"
-              min={24}
-              max={42}
-              value={eg}
-              onChange={(e) => setEg(Number(e.target.value))}
-              className="mt-2 w-full"
-            />
-            <div className="mt-1 flex justify-between text-xs text-slate-500 dark:text-slate-400">
-              <span>24</span>
-              <span>42</span>
+            <label className="text-sm font-medium">Età gestazionale</label>
+            <div className="mt-2 grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-slate-600 dark:text-slate-400">Settimane: {egWeeks}</label>
+                <input
+                  type="range"
+                  min={23}
+                  max={42}
+                  value={egWeeks}
+                  onChange={(e) => {
+                    const weeks = Number(e.target.value);
+                    setEgWeeks(weeks);
+                    if (weeks === 42 && egDays > 0) {
+                      setEgDays(0);
+                    }
+                  }}
+                  className="mt-1 w-full"
+                />
+                <div className="mt-1 flex justify-between text-xs text-slate-500 dark:text-slate-400">
+                  <span>23</span>
+                  <span>42</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs text-slate-600 dark:text-slate-400">Giorni: {egDays}</label>
+                <input
+                  type="range"
+                  min={0}
+                  max={maxDays}
+                  value={egDays}
+                  onChange={(e) => setEgDays(Number(e.target.value))}
+                  className="mt-1 w-full"
+                />
+                <div className="mt-1 flex justify-between text-xs text-slate-500 dark:text-slate-400">
+                  <span>0</span>
+                  <span>{maxDays}</span>
+                </div>
+              </div>
             </div>
+            <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+              EG: {egWeeks} settimane {egDays > 0 ? `+ ${egDays} giorni` : ""}
+            </p>
           </div>
 
           <div>
             <label className="text-sm font-medium">Peso (g)</label>
             <input
-              type="number"
-              inputMode="decimal"
+              type="text"
+              inputMode="numeric"
               placeholder="es. 3500"
               value={peso}
-              onChange={(e) => setPeso(e.target.value)}
+              onChange={(e) => handlePesoChange(e.target.value)}
               className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
@@ -145,11 +255,11 @@ export default function InesPage() {
           <div>
             <label className="text-sm font-medium">Lunghezza (cm)</label>
             <input
-              type="number"
+              type="text"
               inputMode="decimal"
-              placeholder="es. 50"
+              placeholder="es. 50.0"
               value={lunghezza}
-              onChange={(e) => setLunghezza(e.target.value)}
+              onChange={(e) => handleLunghezzaChange(e.target.value)}
               className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
@@ -159,14 +269,20 @@ export default function InesPage() {
               Circonferenza cranica (cm)
             </label>
             <input
-              type="number"
+              type="text"
               inputMode="decimal"
-              placeholder="es. 34"
+              placeholder="es. 34.0"
               value={cc}
-              onChange={(e) => setCc(e.target.value)}
+              onChange={(e) => handleCcChange(e.target.value)}
               className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
+
+          {error && (
+            <div className="rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/20 dark:text-red-400">
+              {error}
+            </div>
+          )}
 
           <button
             onClick={handleCalculate}
@@ -178,9 +294,9 @@ export default function InesPage() {
 
         {result && (
           <div className="mt-6 space-y-4">
-            <ResultRow title="Peso" data={result.peso} />
-            <ResultRow title="Lunghezza" data={result.lunghezza} />
-            <ResultRow title="Circonferenza cranica" data={result.cc} />
+            <ResultRow title="Peso" data={result.peso} unit="g" />
+            <ResultRow title="Lunghezza" data={result.lunghezza} unit="cm" />
+            <ResultRow title="Circonferenza cranica" data={result.cc} unit="cm" />
           </div>
         )}
       </div>
@@ -199,9 +315,11 @@ function formatDs(zScore: number): string {
 function ResultRow({
   title,
   data,
+  unit,
 }: {
   title: string;
   data: InesResult;
+  unit: string;
 }) {
   if (!data) {
     return (
@@ -234,7 +352,7 @@ function ResultRow({
             {title}
           </p>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            {data.value.toFixed(2)} {title === "Peso" ? "g" : "cm"}
+            {data.displayValue} {unit}
           </p>
         </div>
 

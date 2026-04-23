@@ -1,17 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { calculateInesPercentile } from "@/lib/ines/calculateInes";
 
+function formatValue(value: number, type: "peso" | "lunghezza" | "cc"): string {
+  if (type === "peso") {
+    return Math.round(value).toString();
+  }
+  // Per lunghezza e CC, mostra max 1 decimale senza trailing zeros
+  const rounded = Math.round(value * 10) / 10;
+  const str = rounded.toString();
+  if (str.includes(".")) {
+    const [int, dec] = str.split(".");
+    return dec === "0" ? int : str;
+  }
+  return str;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const { sesso, primogenito, eg, peso, lunghezza, cc } = body;
+    const {
+      sesso,
+      primogenito,
+      egWeeks,
+      egDays,
+      egFraction,
+      peso,
+      pesoDisplay,
+      lunghezza,
+      lunghezzaDisplay,
+      cc,
+      ccDisplay,
+    } = body;
 
     const pesoResult =
       peso !== null && peso !== undefined
         ? await calculateInesPercentile({
             measure: "peso",
-            eg,
+            egWeeks,
+            egDays,
+            egFraction,
             sesso,
             primogenito,
             value: peso,
@@ -22,7 +50,9 @@ export async function POST(req: NextRequest) {
       lunghezza !== null && lunghezza !== undefined
         ? await calculateInesPercentile({
             measure: "lunghezza",
-            eg,
+            egWeeks,
+            egDays,
+            egFraction,
             sesso,
             primogenito,
             value: lunghezza,
@@ -33,12 +63,25 @@ export async function POST(req: NextRequest) {
       cc !== null && cc !== undefined
         ? await calculateInesPercentile({
             measure: "cc",
-            eg,
+            egWeeks,
+            egDays,
+            egFraction,
             sesso,
             primogenito,
             value: cc,
           })
         : null;
+
+    // Aggiungi displayValue se disponibile
+    if (pesoResult) {
+      pesoResult.displayValue = pesoDisplay || formatValue(peso, "peso");
+    }
+    if (lunghezzaResult) {
+      lunghezzaResult.displayValue = lunghezzaDisplay || formatValue(lunghezza, "lunghezza");
+    }
+    if (ccResult) {
+      ccResult.displayValue = ccDisplay || formatValue(cc, "cc");
+    }
 
     return NextResponse.json({
       peso: pesoResult,
