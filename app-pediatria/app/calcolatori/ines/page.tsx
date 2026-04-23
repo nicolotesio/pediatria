@@ -18,6 +18,7 @@ type ApiResponse = {
 
 export default function InesPage() {
   const [sesso, setSesso] = useState<"M" | "F">("M");
+  const [primogenito, setPrimogenito] = useState<"SI" | "NO">("SI");
   const [egWeeks, setEgWeeks] = useState<string>("40");
   const [egDays, setEgDays] = useState<string>("0");
   const [peso, setPeso] = useState("3500");
@@ -36,12 +37,7 @@ export default function InesPage() {
     }
 
     const weeksNum = parseInt(egWeeks);
-    const daysNum = egDays === "" ? 3 : parseInt(egDays);
-
-    if (weeksNum < 23 || weeksNum > 42) {
-      setError("Settimane non valide (23-42)");
-      return;
-    }
+    const daysNum = egDays === "" ? 0 : parseInt(egDays);
 
     setLoading(true);
     try {
@@ -50,7 +46,7 @@ export default function InesPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sesso,
-          primogenito: "SI",
+          primogenito,
           egWeeks: weeksNum,
           egDays: daysNum,
           peso: parseFloat(peso),
@@ -70,60 +66,72 @@ export default function InesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+    <main className="min-h-screen bg-slate-50 p-4 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       <div className="mx-auto max-w-md">
-        <Link href="/calcolatori" className="text-sm text-slate-500 mb-4 block">← Torna indietro</Link>
+        <Link href="/calcolatori" className="text-sm text-slate-500 mb-4 block">← Torna ai calcolatori</Link>
         
-        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl p-6 border border-slate-200 dark:border-slate-800">
-          <h1 className="text-2xl font-bold text-center mb-6 text-blue-600">Centili INeS</h1>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 border border-slate-200 dark:border-slate-800">
+          <h1 className="text-xl font-bold mb-6 text-center">Calcolatore Centili INeS</h1>
 
-          <div className="space-y-4">
-            {/* EG */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-bold text-slate-500 uppercase px-1">Settimane</label>
-                <input type="number" value={egWeeks} onChange={(e) => setEgWeeks(e.target.value)} className="w-full p-3 rounded-xl border dark:bg-slate-950" />
+          <div className="space-y-6">
+            {/* Sesso e Primogenito */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Sesso</label>
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                  <button onClick={() => setSesso("M")} className={`flex-1 py-1.5 rounded-md text-sm font-semibold transition-all ${sesso === "M" ? "bg-white dark:bg-slate-700 shadow-sm text-blue-600" : "text-slate-500"}`}>M</button>
+                  <button onClick={() => setSesso("F")} className={`flex-1 py-1.5 rounded-md text-sm font-semibold transition-all ${sesso === "F" ? "bg-white dark:bg-slate-700 shadow-sm text-pink-600" : "text-slate-500"}`}>F</button>
+                </div>
               </div>
-              <div>
-                <label className="text-xs font-bold text-slate-500 uppercase px-1">Giorni (+3 default)</label>
-                <input type="number" value={egDays} onChange={(e) => setEgDays(e.target.value)} className="w-full p-3 rounded-xl border dark:bg-slate-950" />
-              </div>
-            </div>
-
-            {/* Sesso */}
-            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-              <button onClick={() => setSesso("M")} className={`flex-1 py-2 rounded-lg font-bold ${sesso === "M" ? "bg-blue-500 text-white" : "text-slate-500"}`}>M</button>
-              <button onClick={() => setSesso("F")} className={`flex-1 py-2 rounded-lg font-bold ${sesso === "F" ? "bg-pink-500 text-white" : "text-slate-500"}`}>F</button>
-            </div>
-
-            {/* Misure sulla stessa riga */}
-            <div className="grid grid-cols-3 gap-2">
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase text-center block">Peso (g)</label>
-                <input type="number" value={peso} onChange={(e) => setPeso(e.target.value)} className="w-full p-2 rounded-lg border text-center dark:bg-slate-950" />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase text-center block">Lung (cm)</label>
-                <input type="number" step="0.1" value={lunghezza} onChange={(e) => setLunghezza(e.target.value)} className="w-full p-2 rounded-lg border text-center dark:bg-slate-950" />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase text-center block">CC (cm)</label>
-                <input type="number" step="0.1" value={cc} onChange={(e) => setCc(e.target.value)} className="w-full p-2 rounded-lg border text-center dark:bg-slate-950" />
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Primogenito</label>
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                  <button onClick={() => setPrimogenito("SI")} className={`flex-1 py-1.5 rounded-md text-sm font-semibold transition-all ${primogenito === "SI" ? "bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white" : "text-slate-500"}`}>SI</button>
+                  <button onClick={() => setPrimogenito("NO")} className={`flex-1 py-1.5 rounded-md text-sm font-semibold transition-all ${primogenito === "NO" ? "bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white" : "text-slate-500"}`}>NO</button>
+                </div>
               </div>
             </div>
 
-            {error && <p className="text-red-500 text-center text-sm">{error}</p>}
+            {/* Età Gestazionale */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Settimane EG</label>
+                <input type="number" value={egWeeks} onChange={(e) => setEgWeeks(e.target.value)} className="w-full p-2.5 rounded-lg border dark:bg-slate-950 dark:border-slate-700" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Giorni</label>
+                <input type="number" value={egDays} onChange={(e) => setEgDays(e.target.value)} className="w-full p-2.5 rounded-lg border dark:bg-slate-950 dark:border-slate-700" />
+              </div>
+            </div>
 
-            <button onClick={handleCalculate} disabled={loading} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50">
-              {loading ? "Calcolo..." : "CALCOLA"}
+            {/* Misure su righe separate */}
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Peso (grammi)</label>
+                <input type="number" value={peso} onChange={(e) => setPeso(e.target.value)} className="w-full p-2.5 rounded-lg border dark:bg-slate-950 dark:border-slate-700" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Lunghezza (cm)</label>
+                <input type="number" step="0.1" value={lunghezza} onChange={(e) => setLunghezza(e.target.value)} className="w-full p-2.5 rounded-lg border dark:bg-slate-950 dark:border-slate-700" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Circonferenza Cranica (cm)</label>
+                <input type="number" step="0.1" value={cc} onChange={(e) => setCc(e.target.value)} className="w-full p-2.5 rounded-lg border dark:bg-slate-950 dark:border-slate-700" />
+              </div>
+            </div>
+
+            {error && <p className="text-red-500 text-sm font-medium text-center">{error}</p>}
+
+            <button onClick={handleCalculate} disabled={loading} className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-50">
+              {loading ? "Calcolo in corso..." : "CALCOLA PERCENTILI"}
             </button>
           </div>
 
           {result && (
-            <div className="mt-8 space-y-3 border-t pt-6">
-              <ResultBox title="Peso" res={result.peso} color="blue" />
-              <ResultBox title="Lunghezza" res={result.lunghezza} color="emerald" />
-              <ResultBox title="Circonferenza" res={result.cc} color="purple" />
+            <div className="mt-8 space-y-3 border-t border-slate-100 dark:border-slate-800 pt-6">
+              <ResultRow title="Peso" res={result.peso} />
+              <ResultRow title="Lunghezza" res={result.lunghezza} />
+              <ResultRow title="Circ. Cranica" res={result.cc} />
             </div>
           )}
         </div>
@@ -132,14 +140,14 @@ export default function InesPage() {
   );
 }
 
-function ResultBox({ title, res, color }: { title: string, res: InesResult, color: string }) {
+function ResultRow({ title, res }: { title: string, res: InesResult }) {
   if (!res) return null;
   return (
-    <div className={`p-4 rounded-2xl flex justify-between items-center bg-${color}-50 dark:bg-${color}-900/20`}>
-      <span className="font-bold">{title}</span>
+    <div className="flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+      <span className="font-medium text-slate-600 dark:text-slate-400">{title}</span>
       <div className="text-right">
-        <p className="text-2xl font-black">{res.percentile}°</p>
-        <p className="text-xs opacity-60">{res.zScore.toFixed(1)} DS</p>
+        <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{res.percentile}° centile</span>
+        <p className="text-[10px] text-slate-400 uppercase tracking-wider">Z-Score: {res.zScore.toFixed(2)}</p>
       </div>
     </div>
   );
