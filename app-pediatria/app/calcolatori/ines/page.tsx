@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { buttonPrimary, formInput, formSelect, pageContainer, pageDescription, pageMain, pageTitle, panel, subtleLink } from "@/components/ui";
 
 type InesResult = {
   eg: number;
@@ -101,10 +102,10 @@ export default function InesPage() {
       daysNum = Number(egDays);
     }
 
-    const maxDays = weeksNum === 42 ? 0 : 6;
+    const maxDays = weeksNum === 42 ? 3 : 6;
     if (isNaN(daysNum) || daysNum < 0 || daysNum > maxDays) {
-      setError(weeksNum === 42 
-        ? "A 42 settimane i giorni devono essere 0." 
+      setError(weeksNum === 42
+        ? "A 42 settimane i giorni devono essere compresi tra 0 e 3."
         : `I giorni devono essere compresi tra 0 e ${maxDays}.`
       );
       return;
@@ -149,33 +150,33 @@ export default function InesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <div className="mx-auto max-w-5xl p-6">
+    <main className={pageMain}>
+      <div className={pageContainer}>
         <div className="mb-6">
           <Link
             href="/calcolatori"
-            className="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+            className={subtleLink}
           >
             ← Torna ai calcolatori
           </Link>
         </div>
 
-        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+        <h1 className={pageTitle}>
           👶 Centili neonatali INeS
         </h1>
 
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+        <p className={pageDescription}>
           Peso, lunghezza e circonferenza cranica per neonati italiani (23–42 settimane EG)
         </p>
 
-        <div className="mt-6 space-y-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className={`${panel} space-y-4`}>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium">Sesso</label>
               <select
                 value={sesso}
                 onChange={(e) => setSesso(e.target.value as "M" | "F")}
-                className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                className={formSelect}
               >
                 <option value="M">Maschio</option>
                 <option value="F">Femmina</option>
@@ -187,7 +188,7 @@ export default function InesPage() {
               <select
                 value={primogenito}
                 onChange={(e) => setPrimogenito(e.target.value as "SI" | "NO")}
-                className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                className={formSelect}
               >
                 <option value="SI">Sì</option>
                 <option value="NO">No</option>
@@ -206,7 +207,7 @@ export default function InesPage() {
                   placeholder="Settimane"
                   value={egWeeks}
                   onChange={(e) => setEgWeeks(e.target.value.replace(/[^0-9]/g, ""))}
-                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                  className={formInput}
                 />
               </div>
 
@@ -218,7 +219,7 @@ export default function InesPage() {
                   placeholder="+3 (default)"
                   value={egDays}
                   onChange={(e) => setEgDays(e.target.value.replace(/[^0-9]/g, ""))}
-                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                  className={formInput}
                 />
               </div>
             </div>
@@ -232,7 +233,7 @@ export default function InesPage() {
               placeholder="es. 3500"
               value={peso}
               onChange={(e) => handlePesoChange(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              className={formInput}
             />
           </div>
 
@@ -245,7 +246,7 @@ export default function InesPage() {
                 placeholder="es. 50.0"
                 value={lunghezza}
                 onChange={(e) => handleLunghezzaChange(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                className={formInput}
               />
             </div>
 
@@ -257,7 +258,7 @@ export default function InesPage() {
                 placeholder="es. 34.0"
                 value={cc}
                 onChange={(e) => handleCcChange(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                className={formInput}
               />
             </div>
           </div>
@@ -271,7 +272,7 @@ export default function InesPage() {
           <button
             onClick={handleCalculate}
             disabled={loading}
-            className="mt-2 w-full rounded-xl bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+            className={buttonPrimary}
           >
             {loading ? "Calcolo..." : "Calcola"}
           </button>

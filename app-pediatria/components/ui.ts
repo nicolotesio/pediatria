@@ -1,0 +1,13 @@
+export const pageMain = "min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100";
+export const pageContainer = "mx-auto max-w-5xl p-6";
+export const pageHeader = "mb-6";
+export const pageTitle = "text-4xl font-bold tracking-tight sm:text-5xl";
+export const pageDescription = "mt-2 text-sm text-slate-500 dark:text-slate-400";
+export const subtleLink = "text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200";
+export const sectionCard = "rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900";
+export const panel = "rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900";
+export const formInput = "mt-1 w-full rounded-2xl border border-slate-300 bg-white p-3 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-900/40";
+export const formSelect = formInput;
+export const buttonPrimary = "mt-2 inline-flex w-full items-center justify-center rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
+export const cardGrid = "grid gap-5 sm:grid-cols-2 lg:grid-cols-3";
+export const inputRange = "mt-3 w-full";

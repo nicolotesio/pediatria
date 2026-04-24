@@ -1,5 +1,9 @@
 import type { InesLmsRow } from "./types";
 
+function parseNumber(value: string): number {
+  return Number(value.replace(/,/g, "."));
+}
+
 export function parseInesCsv(csvText: string): InesLmsRow[] {
   const lines = csvText
     .split(/\r?\n/)
@@ -10,16 +14,21 @@ export function parseInesCsv(csvText: string): InesLmsRow[] {
 
   const dataLines = lines.slice(1); // Skip header
 
-  return dataLines.map((line) => {
-    const cols = line.split(",");
+  return dataLines
+    .map((line) => {
+      const cleanedLine = line.replace(/^\uFEFF/, "");
+      const cols = cleanedLine.split(";").map((value) => value.trim());
 
-    return {
-      eg: Number(cols[0]), // Età gestazionale
-      sesso: cols[1] as "M" | "F", // Sesso
-      primogenito: cols[2] as "SI" | "NO", // Primogenito
-      l: Number(cols[3]),
-      m: Number(cols[4]),
-      s: Number(cols[5]),
-    };
-  });
+      if (cols.length < 6) return null;
+
+      return {
+        eg: parseNumber(cols[0]), // Età gestazionale
+        sesso: cols[1] as "M" | "F", // Sesso
+        primogenito: cols[2] as "SI" | "NO", // Primogenito
+        l: parseNumber(cols[3]),
+        m: parseNumber(cols[4]),
+        s: parseNumber(cols[5]),
+      };
+    })
+    .filter((row): row is InesLmsRow => row !== null && !Number.isNaN(row.eg));
 }

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { calculateWetflag } from "@/lib/calculations/wetflag";
+import { buttonPrimary, formInput, pageContainer, pageDescription, pageMain, pageTitle, panel, subtleLink } from "@/components/ui";
 
 export default function WetflagPage() {
   const [age, setAge] = useState(4);
@@ -22,22 +23,22 @@ export default function WetflagPage() {
   }, [effectiveWeight, age]);
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <div className="mx-auto max-w-5xl p-6">
+    <main className={pageMain}>
+      <div className={pageContainer}>
         <div className="mb-5">
           <Link
             href="/emergenze"
-            className="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+            className={subtleLink}
           >
             ← Torna a Emergenze
           </Link>
         </div>
 
         <div>
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+          <h1 className={pageTitle}>
             WETFLAG
           </h1>
-          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
+          <p className={pageDescription}>
             Calcoli rapidi da età e peso
           </p>
         </div>

@@ -1,6 +1,8 @@
 export type InesSex = "M" | "F";
 export type InesPrimogenito = "SI" | "NO";
 export type InesMeasure = "peso" | "lunghezza" | "cc";
+export type InesData = InesLmsRow;
+export type InesResult = InesCalculationResult;
 
 export type InesLmsRow = {
   eg: number; // Età gestazionale (settimane)

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { buttonPrimary, formInput, formSelect, pageContainer, pageDescription, pageMain, pageTitle, panel, subtleLink } from "@/components/ui";
 
 type WhoResult = {
   x: number;
@@ -66,32 +67,32 @@ export default function WHOPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <div className="mx-auto max-w-5xl p-6">
+    <main className={pageMain}>
+      <div className={pageContainer}>
         <div className="mb-6">
           <Link
             href="/calcolatori"
-            className="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+            className={subtleLink}
           >
             ← Torna ai calcolatori
           </Link>
         </div>
 
-        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+        <h1 className={pageTitle}>
           📈 Centili WHO 0–2 anni
         </h1>
 
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+        <p className={pageDescription}>
           Peso, lunghezza, circonferenza cranica e peso per lunghezza
         </p>
 
-        <div className="mt-6 space-y-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className={panel}>
           <div>
             <label className="text-sm font-medium">Sesso</label>
             <select
               value={sex}
               onChange={(e) => setSex(e.target.value as "boys" | "girls")}
-              className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              className={formSelect}
             >
               <option value="boys">Maschio</option>
               <option value="girls">Femmina</option>
@@ -122,7 +123,7 @@ export default function WHOPage() {
               placeholder="es. 7.5"
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              className={formInput}
             />
           </div>
 
@@ -134,7 +135,7 @@ export default function WHOPage() {
               placeholder="es. 65"
               value={length}
               onChange={(e) => setLength(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              className={formInput}
             />
           </div>
 
@@ -148,13 +149,13 @@ export default function WHOPage() {
               placeholder="es. 42"
               value={head}
               onChange={(e) => setHead(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              className={formInput}
             />
           </div>
 
           <button
             onClick={handleCalculate}
-            className="mt-2 w-full rounded-xl bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700"
+            className={buttonPrimary}
           >
             {loading ? "Calcolo..." : "Calcola"}
           </button>

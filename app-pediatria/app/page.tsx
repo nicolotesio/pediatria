@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ThemeToggle from "@/components/theme-toggle";
+import { cardGrid, formInput, pageContainer, pageDescription, pageMain, pageTitle, subtleLink } from "@/components/ui";
 
 const mainSections = [
   { href: "/appunti", title: "Appunti", desc: "Appunti divisi per materia", icon: "📚" },
@@ -12,13 +13,13 @@ const mainSections = [
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <div className="mx-auto max-w-6xl p-6">
+    <main className={pageMain}>
+      <div className={pageContainer}>
 
         {/* HEADER */}
         <div className="mt-2 flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+            <h1 className={pageTitle}>
               Appunti di <span className="text-blue-500">Pediatria</span>
             </h1>
 
@@ -26,7 +27,7 @@ export default function HomePage() {
               di Dr Nicolò Tesio
             </p>
 
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            <p className={pageDescription}>
               Webapp personale di studio e supporto clinico
             </p>
           </div>
@@ -41,7 +42,7 @@ export default function HomePage() {
           <input
             type="text"
             placeholder="Cerca: bronchiolite, febbre, paracetamolo..."
-            className="w-full rounded-2xl border border-slate-300 bg-white p-4 pl-12 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-400"
+            className={`${formInput} w-full rounded-2xl pl-12 text-sm placeholder:text-slate-500 focus:ring-blue-500 dark:placeholder:text-slate-400`}
           />
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
             🔍
@@ -49,7 +50,7 @@ export default function HomePage() {
         </div>
 
         {/* SEZIONI PRINCIPALI */}
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className={cardGrid}>
           {mainSections.map((section) => (
             <Link
               key={section.href}

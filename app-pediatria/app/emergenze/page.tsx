@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cardGrid, pageContainer, pageMain, pageTitle, pageDescription, subtleLink } from "@/components/ui";
 
 const emergencySections = [
   {
@@ -10,14 +11,14 @@ const emergencySections = [
 
 export default function EmergenzePage() {
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <div className="mx-auto max-w-6xl p-6">
+    <main className={pageMain}>
+      <div className={pageContainer}>
 
         {/* BACK HOME */}
         <div className="mb-4">
           <Link
             href="/"
-            className="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+            className={subtleLink}
           >
             ← Torna alla home
           </Link>
@@ -25,18 +26,18 @@ export default function EmergenzePage() {
 
         {/* TITLE */}
         <div className="mt-2">
-          <h1 className="flex items-center gap-2 text-4xl font-bold tracking-tight sm:text-5xl">
+          <h1 className={`flex items-center gap-2 ${pageTitle}`}>
             <span>🚑</span>
             Emergenze
           </h1>
 
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          <p className={pageDescription}>
             Strumenti rapidi per la gestione in urgenza
           </p>
         </div>
 
         {/* GRID */}
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className={cardGrid}>
           {emergencySections.map((section) => (
             <Link
               key={section.href}
