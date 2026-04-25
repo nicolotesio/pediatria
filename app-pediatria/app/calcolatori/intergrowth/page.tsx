@@ -43,20 +43,20 @@ export default function IntergrowthPage() {
     }
 
     const weeksNum = Number(egWeeks);
-    if (isNaN(weeksNum) || weeksNum < 22 || weeksNum > 50) {
-      setError("Le settimane devono essere comprese tra 22 e 50.");
+    if (isNaN(weeksNum) || weeksNum < 24 || weeksNum > 42) {
+      setError("Le settimane devono essere comprese tra 24 e 42.");
       return;
     }
 
     // Validazione giorni
     let daysNum: number;
     if (!egDays || egDays.trim() === "") {
-      daysNum = 0;
+      daysNum = 3;
     } else {
       daysNum = Number(egDays);
     }
 
-    const maxDays = 6;
+    const maxDays = weeksNum === 42 ? 6 : 6;
     if (isNaN(daysNum) || daysNum < 0 || daysNum > maxDays) {
       setError(`I giorni devono essere compresi tra 0 e ${maxDays}.`);
       return;
@@ -119,7 +119,7 @@ export default function IntergrowthPage() {
         </h1>
 
         <p className={pageDescription}>
-          Peso alla nascita per neonati da 22 a 50 settimane di età gestazionale
+          Peso alla nascita per neonati da 24 a 42 settimane (42+6 giorni)
         </p>
 
         <div className={`${panel} space-y-4`}>
@@ -139,7 +139,7 @@ export default function IntergrowthPage() {
             <label className="text-sm font-medium">Età gestazionale</label>
             <div className="mt-2 grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-slate-600 dark:text-slate-400">Settimane (22-50)</label>
+                <label className="text-xs text-slate-600 dark:text-slate-400">Settimane (24-42)</label>
                 <input
                   type="text"
                   inputMode="numeric"

@@ -77,9 +77,9 @@ export async function calculateIntergrowth(
   const { egWeeks, egDays, sex, value } = options;
   const egDecimal = egWeeks + egDays / 7;
 
-  // Validazione EG (INTERGROWTH è disponibile da 22 settimane)
-  if (egDecimal < 22.0 || egDecimal > 50.0) {
-    throw new Error("Età gestazionale fuori range (22+0 - 50+0)");
+  // Validazione EG (INTERGROWTH è disponibile da 24+0 a 42+6)
+  if (egDecimal < 24.0 || egDecimal > 42.857142857142857) {
+    throw new Error("Età gestazionale fuori range (24+0 - 42+6)");
   }
 
   // Validazione peso (value è in kg)
