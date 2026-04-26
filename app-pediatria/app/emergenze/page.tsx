@@ -7,6 +7,11 @@ const emergencySections = [
     title: "WETFLAG",
     desc: "Calcoli rapidi da peso o età",
   },
+  {
+    href: "/emergenze/farmaci",
+    title: "Farmaci in emergenza pediatrica",
+    desc: "Calcolatore di dosaggi pediatrici in emergenza",
+  },
 ];
 
 export default function EmergenzePage() {
