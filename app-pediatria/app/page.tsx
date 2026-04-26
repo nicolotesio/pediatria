@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ThemeToggle from "@/components/theme-toggle";
-import { cardGrid, formInput, pageContainer, pageDescription, pageMain, pageTitle, subtleLink } from "@/components/ui";
+import { cardGrid, pageContainer, pageDescription, pageMain, pageTitle } from "@/components/ui";
+import SearchBar from "@/components/SearchBar";
 
 const mainSections = [
   { href: "/appunti", title: "Appunti", desc: "Appunti divisi per materia", icon: "📚" },
@@ -38,16 +39,7 @@ export default function HomePage() {
         </div>
 
         {/* SEARCH */}
-        <div className="mt-8 relative">
-          <input
-            type="text"
-            placeholder="Cerca: bronchiolite, febbre, paracetamolo..."
-            className={`${formInput} w-full rounded-2xl pl-12 text-sm placeholder:text-slate-500 focus:ring-blue-500 dark:placeholder:text-slate-400`}
-          />
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-            🔍
-          </span>
-        </div>
+        <SearchBar />
 
         {/* SEZIONI PRINCIPALI */}
         <div className={cardGrid}>
