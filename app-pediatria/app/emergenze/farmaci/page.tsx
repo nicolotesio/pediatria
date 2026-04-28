@@ -7,36 +7,44 @@ import {
   calculateDosePerKg,
   calculateFixedDose,
   calculateDoseRange,
-  getWeightAlertStatus,
-  getEffectiveWeight,
   CalculationResult,
 } from "@/lib/emergency-drugs/emergencyDrugCalculations";
 import { pageContainer, pageDescription, pageMain, pageTitle, subtleLink } from "@/components/ui";
+import { InputCard } from "@/components/emergency-drugs/InputCard";
+import { InfoBox } from "@/components/emergency-drugs/InfoBox";
+import { DrugItem } from "@/components/emergency-drugs/DrugItem";
 
 export default function FarmaciEmergenzaPage() {
   const [weight, setWeight] = useState(25);
   const [age, setAge] = useState(5);
-  const [useAge, setUseAge] = useState(false);
+  const [estimateWeight, setEstimateWeight] = useState(false);
 
-  // Calcoli derivati
-  const { effective: effectiveWeight, capped: weightCapped } = useMemo(
-    () => getEffectiveWeight(weight),
-    [weight]
-  );
-
-  const weightAlert = useMemo(
-    () => getWeightAlertStatus(weight, age),
-    [weight, age]
-  );
-
-  const displayAge = useMemo(() => {
-    return age === Math.floor(age) ? `${age} anni` : `${age.toFixed(1)} anni`;
+  // Calcola il peso stimato da età
+  const estimatedWeight = useMemo(() => {
+    return (age + 4) * 2;
   }, [age]);
 
-  const displayWeight = useMemo(
-    () => (weight % 1 === 0 ? `${weight} kg` : `${weight.toFixed(1)} kg`),
-    [weight]
-  );
+  // Peso effettivo per i calcoli (capped a 70 kg)
+  const effectiveWeight = useMemo(() => {
+    const weight_to_use = estimateWeight ? estimatedWeight : weight;
+    return Math.min(weight_to_use, 70);
+  }, [estimateWeight, estimatedWeight, weight]);
+
+  // Verifica se il peso è stato capped
+  const weightCapped = useMemo(() => {
+    const weight_to_use = estimateWeight ? estimatedWeight : weight;
+    return weight_to_use > 70;
+  }, [estimateWeight, estimatedWeight, weight]);
+
+  // Formattazione per la visualizzazione
+  const displayAge = useMemo(() => {
+    return age % 1 === 0 ? `${age} anni` : `${age.toFixed(1)} anni`;
+  }, [age]);
+
+  const displayWeight = useMemo(() => {
+    const w = estimateWeight ? estimatedWeight : weight;
+    return w % 1 === 0 ? `${w} kg` : `${w.toFixed(1)} kg`;
+  }, [weight, estimateWeight, estimatedWeight]);
 
   return (
     <main className={pageMain}>
@@ -59,32 +67,39 @@ export default function FarmaciEmergenzaPage() {
           </p>
         </div>
 
-        {/* INPUT SECTION */}
-        <InputSection
-          weight={weight}
-          setWeight={setWeight}
+        {/* INPUT SECTION - REPLICA WETFLAG */}
+        <InputCard
           age={age}
           setAge={setAge}
-          useAge={useAge}
-          setUseAge={setUseAge}
+          weight={weight}
+          setWeight={setWeight}
+          estimateWeight={estimateWeight}
+          setEstimateWeight={setEstimateWeight}
         />
 
-        {/* ALERTS */}
-        {weightAlert.level === "red" && (
-          <AlertBox type="error" message={weightAlert.message!} />
-        )}
-        {weightAlert.level === "yellow" && (
-          <AlertBox type="warning" message={weightAlert.message!} />
-        )}
+        {/* INFO BOXES - SEMPRE VISIBILI */}
+        <InfoBox type="info" title="Neonati e basso peso">
+          Età inferiore a 1 anno o peso inferiore a 10 kg — considerare linee guida neonatali ALS
+          o fare riferimento a RCUK.
+        </InfoBox>
+
+        <InfoBox type="info" title="Bambini grandi e adolescenti">
+          Nei bambini con peso corporeo elevato, considerare il dosaggio sul peso ideale per i farmaci
+          idrofili. Per età superiore a 12 anni possono essere utilizzati algoritmi per adulti, secondo
+          giudizio clinico.
+        </InfoBox>
 
         {/* SUMMARY */}
         <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
-            Riepilogo
-          </p>
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-300">Riepilogo</p>
           <p className="mt-3 text-lg font-semibold text-slate-900 dark:text-slate-100">
             Età: {displayAge} | Peso: {displayWeight}
           </p>
+          {estimateWeight && (
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+              Peso stimato con formula: (età + 4) × 2
+            </p>
+          )}
           {weightCapped && (
             <p className="mt-2 text-sm text-amber-600 dark:text-amber-400">
               I calcoli verranno effettuati su 70 kg (peso massimo)
@@ -109,117 +124,6 @@ export default function FarmaciEmergenzaPage() {
 }
 
 // ============================================================================
-// COMPONENT: InputSection
-// ============================================================================
-
-function InputSection({
-  weight,
-  setWeight,
-  age,
-  setAge,
-  useAge,
-  setUseAge,
-}: {
-  weight: number;
-  setWeight: (w: number) => void;
-  age: number;
-  setAge: (a: number) => void;
-  useAge: boolean;
-  setUseAge: (u: boolean) => void;
-}) {
-  return (
-    <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <div>
-        <div className="flex items-center justify-between">
-          <label className="text-sm font-medium">Età</label>
-          <span className="text-base font-semibold">
-            {age % 1 === 0 ? `${age} anni` : `${age.toFixed(1)} anni`}
-          </span>
-        </div>
-
-        <input
-          type="range"
-          min={0.5}
-          max={18}
-          step={0.5}
-          value={age}
-          onChange={(e) => setAge(Number(e.target.value))}
-          className="mt-3 w-full"
-        />
-
-        <div className="mt-1.5 flex justify-between text-xs text-slate-500 dark:text-slate-400">
-          <span>0.5 anni (6 mesi)</span>
-          <span>18 anni</span>
-        </div>
-      </div>
-
-      <div className="mt-8">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <label className="text-sm font-medium">Peso</label>
-          </div>
-          <span className="text-base font-semibold">
-            {weight % 1 === 0 ? `${weight} kg` : `${weight.toFixed(1)} kg`}
-          </span>
-        </div>
-
-        <input
-          type="range"
-          min={3}
-          max={100}
-          step={0.5}
-          value={weight}
-          onChange={(e) => setWeight(Number(e.target.value))}
-          className="mt-3 w-full"
-        />
-
-        <div className="mt-1.5 flex justify-between text-xs text-slate-500 dark:text-slate-400">
-          <span>3 kg</span>
-          <span>100 kg</span>
-        </div>
-
-        <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-          💡 Nota: Inserire il peso effettivo del paziente. Se non disponibile, sarà implementato in futuro uno stimatore dal peso.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// COMPONENT: AlertBox
-// ============================================================================
-
-function AlertBox({
-  type,
-  message,
-}: {
-  type: "error" | "warning";
-  message: string;
-}) {
-  const bgColor =
-    type === "error"
-      ? "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800"
-      : "bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800";
-
-  const textColor =
-    type === "error"
-      ? "text-red-800 dark:text-red-100"
-      : "text-yellow-800 dark:text-yellow-100";
-
-  const iconColor = type === "error" ? "🔴" : "🟡";
-
-  return (
-    <div className={`mt-6 rounded-3xl border ${bgColor} p-5`}>
-      <p className={`flex items-start gap-3 text-base font-medium ${textColor}`}>
-        <span className="mt-0.5">{iconColor}</span>
-        <span>{message}</span>
-      </p>
-    </div>
-  );
-}
-
-// ============================================================================
 // COMPONENT: CategorySection
 // ============================================================================
 
@@ -236,11 +140,11 @@ function CategorySection({
   const hasSubsections = category.subsections && category.subsections.length > 0;
 
   return (
-    <section className="mt-8">
+    <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       {/* CATEGORY HEADER - ACCORDION TOGGLE */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+        className="w-full transition"
       >
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-left text-lg font-bold text-slate-900 dark:text-slate-100">
@@ -252,11 +156,11 @@ function CategorySection({
         </div>
       </button>
 
-      {/* CATEGORY CONTENT - COLLAPSIBLE */}
+      {/* CATEGORY CONTENT - COLLAPSIBLE - DENTRO LA STESSA CARD */}
       {isOpen && (
-        <div className="mt-4 space-y-6">
+        <div className="mt-6 space-y-6 border-t border-slate-200 pt-6 dark:border-slate-800">
           {/* TOGGLE FOR CALCULATIONS */}
-          <div className="flex items-center gap-3 px-2">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setShowCalculations(!showCalculations)}
               className="rounded-2xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
@@ -343,125 +247,15 @@ function DrugsList({
   return (
     <div className="space-y-4">
       {drugs.map((drug, idx) => (
-        <DrugCard
+        <DrugItem
           key={idx}
-          drug={drug}
+          name={drug.name}
+          dosages={drug.dosages}
+          additionalInfo={drug.additionalInfo}
           effectiveWeight={effectiveWeight}
           showCalculations={showCalculations}
         />
       ))}
-    </div>
-  );
-}
-
-// ============================================================================
-// COMPONENT: DrugCard
-// ============================================================================
-
-function DrugCard({
-  drug,
-  effectiveWeight,
-  showCalculations,
-}: {
-  drug: Drug;
-  effectiveWeight: number;
-  showCalculations: boolean;
-}) {
-  return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-        {drug.name}
-      </h3>
-
-      <div className="mt-4 space-y-3">
-        {drug.dosages.map((dosage, idx) => (
-          <DosageRow
-            key={idx}
-            dosage={dosage}
-            effectiveWeight={effectiveWeight}
-            showCalculations={showCalculations}
-          />
-        ))}
-      </div>
-
-      {drug.additionalInfo && (
-        <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
-          ℹ️ {drug.additionalInfo}
-        </p>
-      )}
-    </div>
-  );
-}
-
-// ============================================================================
-// COMPONENT: DosageRow
-// ============================================================================
-
-function DosageRow({
-  dosage,
-  effectiveWeight,
-  showCalculations,
-}: {
-  dosage: any;
-  effectiveWeight: number;
-  showCalculations: boolean;
-}) {
-  // Calcola la dose
-  let calculation: CalculationResult | { min: number; max: number; formula: string } | null = null;
-  let displayValue: string = "";
-
-  if (dosage.dosePerKgMin !== undefined && dosage.dosePerKgMax !== undefined) {
-    // Range di dosaggio (es. Adenosina 0.1-0.2 mg/kg)
-    calculation = calculateDoseRange(
-      effectiveWeight,
-      dosage.dosePerKgMin,
-      dosage.dosePerKgMax,
-      dosage.maxDose,
-      dosage.unit
-    );
-    const min = (calculation as any).min;
-    const max = (calculation as any).max;
-    const cappedText = (calculation as any).cappedAt ? " (limitato)" : "";
-    displayValue = `${min}–${max} ${dosage.unit}${cappedText}`;
-  } else if (dosage.dosePerKg !== undefined) {
-    calculation = calculateDosePerKg(
-      effectiveWeight,
-      dosage.dosePerKg,
-      dosage.maxDose,
-      dosage.unit
-    );
-    const cappedText = calculation.capped ? " (limitato)" : "";
-    displayValue = `${(calculation as CalculationResult).dose} ${dosage.unit}${cappedText}`;
-  } else if (dosage.doseFixed !== undefined) {
-    calculation = calculateFixedDose(dosage.doseFixed, dosage.unit);
-    displayValue = `${(calculation as CalculationResult).dose} ${dosage.unit}`;
-  }
-
-  return (
-    <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
-      {/* LABEL E DOSE EVIDENZIATA */}
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          {dosage.label}
-        </p>
-        <p className="shrink-0 text-2xl font-bold text-slate-900 dark:text-slate-100">
-          {displayValue}
-        </p>
-      </div>
-
-      {/* DESCRIPTION */}
-      <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-        {dosage.description}
-      </p>
-
-      {/* CALCULATIONS - TOGGLE */}
-      {showCalculations && calculation && (
-        <div className="mt-3 border-t border-slate-200 pt-3 dark:border-slate-700">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Calcolo: {calculation.formula}
-          </p>
-        </div>
-      )}
     </div>
   );
 }
